@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>NATS Recorder Control Panel</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 1200px; margin: auto; }
+        .half-screen { margin-bottom: 30px; border: 1px solid #ccc; padding: 15px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        button { padding: 10px 15px; margin-right: 10px; cursor: pointer; }
+        .status-recording { background-color: #ffdddd; }
+        .status-idle { background-color: #ddffdd; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>NATS Recorder Control Panel</h1>
+
+    <!-- 上半屏：控制与状态 -->
+    <div class="half-screen" id="control-section">
+        <h2>1. Agent Control & Status</h2>
+        
+        <!-- 控制按钮 -->
+        <div>
+            <button onclick="sendCommand('start_record')" style="background-color: green; color: white;">开始录音 (start_record)</button>
+            <button onclick="sendCommand('stop_record')" style="background-color: red; color: white;">停止录音 (stop_record)</button>
+        </div>
+        <p id="command-feedback" style="margin-top: 10px; color: blue;"></p>
+
+        <!-- 状态表格 -->
+        <h3>Connected Agent Status</h3>
+        <span id="last-status-update"></span>
+        <table>
+            <thead>
+                <tr>
+                    <th>Session ID</th>
+                    <th>Status</th>
+                    <th>Last Updated</th>
+                </tr>
+            </thead>
+            <!-- 使用 ID 方便 JavaScript 找到并更新 -->
+            <tbody id="agent-status-body">
+                <tr><td colspan="3">正在加载状态...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 下半屏：历史记录 -->
+    <div class="half-screen" id="history-section">
+        <h2>2. Recording History (Recent 10)</h2>
+        <button onclick="fetchHistory()" style="background-color: steelblue; color: white; margin-bottom: 10px;">刷新历史 (Refresh)</button>
+        <span id="history-feedback" style="margin-left: 15px;"></span>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>File Name</th>
+                    <th>Upload Time</th>
+                    <th>Size (KB)</th>
+                    <th>Transcript</th>
+                </tr>
+            </thead>
+            <!-- 使用 ID 方便 JavaScript 找到并更新 -->
+            <tbody id="recording-history-body">
+                <tr><td colspan="4">正在加载历史记录...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 初始加载数据
+        fetchStatus();
+        fetchHistory();
+
+        // 状态表每 3 秒自动刷新
+        setInterval(fetchStatus, 3000);
+    });
+
+    // 格式化时间戳的辅助函数
+    function formatTime(timestamp) {
+        const date = new Date(timestamp);
+        // 确保时间是本地格式，如果服务器返回 UTC，前端需要自行转换
+        return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+    }
+
+    // --- Status Logic ---
+
+    function renderStatus(data) {
+        const tbody = document.getElementById('agent-status-body');
+        tbody.innerHTML = ''; // 清空现有内容
+
+        if (data && data.length > 0) {
+            data.forEach(agent => {
+                const row = tbody.insertRow();
+                // 使用状态值设置 class，方便 CSS 区分颜色
+                row.className = `status-${agent.status}`;
+                
+                row.insertCell().textContent = agent.session_id;
+                row.insertCell().innerHTML = `<strong>${agent.status}</strong>`;
+                row.insertCell().textContent = formatTime(agent.last_update);
+            });
+        } else {
+            const row = tbody.insertRow();
+            const cell = row.insertCell();
+            cell.colSpan = 3;
+            cell.textContent = "当前没有 Agent 上报状态。";
+        }
+        
+        document.getElementById('last-status-update').textContent = `最近状态更新时间: ${formatTime(new Date())}`;
+    }
+
+    function fetchStatus() {
+        fetch('/api/status')
+            .then(response => response.json())
+            .then(data => {
+                renderStatus(data);
+            })
+            .catch(error => {
+                console.error('Error fetching status:', error);
+                document.getElementById('agent-status-body').innerHTML = '<tr><td colspan="3" style="color: red;">加载状态数据失败。</td></tr>';
+            });
+    }
+
+    // --- History Logic ---
+
+    function renderHistory(data) {
+        const tbody = document.getElementById('recording-history-body');
+        tbody.innerHTML = ''; // 清空现有内容
+
+        if (data && data.length > 0) {
+            data.forEach(record => {
+                const row = tbody.insertRow();
+                
+                // 对应字段: FileName, UploadTime, SizeKB, Transcript
+                row.insertCell().textContent = record.file_name;
+                row.insertCell().textContent = formatTime(record.upload_time);
+                row.insertCell().textContent = record.size_kb;
+                row.insertCell().textContent = record.transcript;
+            });
+        } else {
+            const row = tbody.insertRow();
+            const cell = row.insertCell();
+            cell.colSpan = 4;
+            cell.textContent = "没有找到录音历史记录。";
+        }
+        document.getElementById('history-feedback').textContent = ''; // 清除反馈信息
+    }
+
+    function fetchHistory() {
+        const feedback = document.getElementById('history-feedback');
+        feedback.textContent = '正在刷新...';
+        
+        fetch('/api/history')
+            .then(response => response.json())
+            .then(data => {
+                renderHistory(data);
+            })
+            .catch(error => {
+                console.error('Error fetching history:', error);
+                feedback.textContent = '刷新历史记录失败。';
+            });
+    }
+
+    // --- Command Logic ---
+
+    function sendCommand(action) {
+        const feedback = document.getElementById('command-feedback');
+        feedback.textContent = `发送指令: ${action}...`;
+
+        fetch(`/api/command?action=${action}`)
+            .then(response => response.text())
+            .then(data => {
+                feedback.textContent = `指令成功: ${data}`;
+                // 指令发送成功后，立即触发历史记录刷新，因为 stop_record 会触发上传日志
+                fetchHistory(); 
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                feedback.textContent = `指令失败: ${error}`;
+            });
+    }
+</script>
+
+</body>
+</html>
