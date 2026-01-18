@@ -31,7 +31,8 @@ func InitDB() {
 		file_name TEXT,
 		upload_time DATETIME,
 		size_kb INTEGER,
-		transcript TEXT
+		transcript TEXT,
+		related_command TEXT
 	);
 	`
 	_, err = DB.Exec(createTables)
@@ -58,7 +59,7 @@ func UpdateAgentStatus(status models.AgentStatus) error {
 }
 
 func GetAllAgentStatuses() ([]models.AgentStatus, error) {
-	rows, err := DB.Query("SELECT session_id, status, last_update FROM agents ORDER BY last_update DESC")
+	rows, err := DB.Query("SELECT session_id, status, last_update FROM agents WHERE last_update >= datetime('now', 'localtime', '-1 minute') ORDER BY last_update DESC")
 	if err != nil {
 		return nil, err
 	}
@@ -81,10 +82,10 @@ func GetAllAgentStatuses() ([]models.AgentStatus, error) {
 
 func InsertRecording(r models.Recording) error {
 	const stmt = `
-	INSERT INTO recordings (file_name, upload_time, size_kb, transcript) 
-	VALUES (?, ?, ?, ?);
+	INSERT INTO recordings (file_name, upload_time, size_kb, transcript, related_command) 
+	VALUES (?, ?, ?, ?, ?);
 	`
-	_, err := DB.Exec(stmt, r.FileName, r.UploadTime, r.SizeKB, r.Transcript)
+	_, err := DB.Exec(stmt, r.FileName, r.UploadTime, r.SizeKB, r.Transcript, r.RelatedCommand)
 	if err != nil {
 		return fmt.Errorf("failed to insert recording: %w", err)
 	}
@@ -93,7 +94,7 @@ func InsertRecording(r models.Recording) error {
 }
 
 func GetRecentRecordings(limit int) ([]models.Recording, error) {
-	rows, err := DB.Query("SELECT file_name, upload_time, size_kb, transcript FROM recordings ORDER BY upload_time DESC LIMIT ?", limit)
+	rows, err := DB.Query("SELECT file_name, upload_time, size_kb, transcript, related_command FROM recordings ORDER BY upload_time DESC LIMIT ?", limit)
 	if err != nil {
 		return nil, err
 	}
@@ -103,7 +104,7 @@ func GetRecentRecordings(limit int) ([]models.Recording, error) {
 	for rows.Next() {
 		var r models.Recording
 		// Note: ID is auto-incremented, no need to read it here
-		if err := rows.Scan(&r.FileName, &r.UploadTime, &r.SizeKB, &r.Transcript); err != nil {
+		if err := rows.Scan(&r.FileName, &r.UploadTime, &r.SizeKB, &r.Transcript, &r.RelatedCommand); err != nil {
 			return nil, err
 		}
 		recordings = append(recordings, r)

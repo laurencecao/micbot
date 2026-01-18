@@ -69,10 +69,11 @@ func subscribeUploadRecord() {
 
 		// MOCK: Generate metadata for the DB
 		newRecord := models.Recording{
-			FileName:   cmd.Payload,
-			UploadTime: time.Now(),
-			SizeKB:     rand.Intn(5000) + 1000, // 1MB to 6MB mock size
-			Transcript: "This is a mock transcription of the recorded audio: 'Hello World, NATS is great!'",
+			FileName:       cmd.Payload,
+			UploadTime:     time.Now(),
+			SizeKB:         rand.Intn(5000) + 1000, // 1MB to 6MB mock size
+			Transcript:     "This is a mock transcription of the recorded audio: 'Hello World, NATS is great!'",
+			RelatedCommand: "Command: A47-V2.0, SampleRate: 44100Hz",
 		}
 
 		// 写入数据库

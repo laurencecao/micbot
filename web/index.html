@@ -62,11 +62,12 @@
                     <th>Upload Time</th>
                     <th>Size (KB)</th>
                     <th>Transcript</th>
+                    <th>Related Command</th>
                 </tr>
             </thead>
             <!-- 使用 ID 方便 JavaScript 找到并更新 -->
             <tbody id="recording-history-body">
-                <tr><td colspan="4">正在加载历史记录...</td></tr>
+                <tr><td colspan="5">正在加载历史记录...</td></tr>
             </tbody>
         </table>
     </div>
@@ -142,11 +143,12 @@
                 row.insertCell().textContent = formatTime(record.upload_time);
                 row.insertCell().textContent = record.size_kb;
                 row.insertCell().textContent = record.transcript;
+                row.insertCell().textContent = record.related_command;
             });
         } else {
             const row = tbody.insertRow();
             const cell = row.insertCell();
-            cell.colSpan = 4;
+            cell.colSpan = 5; 
             cell.textContent = "没有找到录音历史记录。";
         }
         document.getElementById('history-feedback').textContent = ''; // 清除反馈信息

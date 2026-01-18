@@ -19,15 +19,17 @@ type AgentStatus struct {
 
 // Recording 存储在 SQLite 的 recordings 表中
 type Recording struct {
-	ID         int       `json:"id"`
-	FileName   string    `json:"file_name"`
-	UploadTime time.Time `json:"upload_time"`
-	SizeKB     int       `json:"size_kb"`
-	Transcript string    `json:"transcript"`
+	ID             int       `json:"id"`
+	FileName       string    `json:"file_name"`
+	UploadTime     time.Time `json:"upload_time"`
+	SizeKB         int       `json:"size_kb"`
+	Transcript     string    `json:"transcript"`
+	RelatedCommand string    `json:"related_command"`
 }
 
 // CommandMessage 用于 NATS 发送的指令
 type CommandMessage struct {
 	AgentID string `json:"agent_id,omitempty"` // 用于定向指令或状态报告
 	Payload string `json:"payload,omitempty"`  // 额外参数 (如文件名)
+	Body    []byte `json:"body,omitempty"`
 }

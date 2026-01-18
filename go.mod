@@ -3,7 +3,7 @@ module medishare.io/micbot
 go 1.24.5
 
 require (
-	github.com/google/uuid v1.6.0
+	github.com/denisbrodbeck/machineid v1.0.1
 	github.com/mattn/go-sqlite3 v1.14.33
 	github.com/nats-io/nats.go v1.48.0
 )
