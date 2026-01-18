@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"html/template"
 	"log"
-	"math/rand"
 	"net/http"
 	"os"
 	"time"
 
+	"medishare.io/micbot/internal/asr"
 	"medishare.io/micbot/internal/config"
 	"medishare.io/micbot/internal/database"
 	"medishare.io/micbot/internal/models"
@@ -67,13 +67,29 @@ func subscribeUploadRecord() {
 			return
 		}
 
+		// 在这里处理transcribe
+		log.Println("假装在跟ASR模型交互，转写中......", len(cmd.Body))
+
+		// 调用转录函数
+		result, err := asr.Transcribe(cmd.Body)
+		if err != nil {
+			fmt.Printf("转录失败: %v\n", err)
+			return
+		}
+
+		fmt.Printf("转录结果: %v\n", result)
+		txt := "转写失败了！"
+		if result.Success {
+			txt = result.Text
+		}
+
 		// MOCK: Generate metadata for the DB
 		newRecord := models.Recording{
 			FileName:       cmd.Payload,
 			UploadTime:     time.Now(),
-			SizeKB:         rand.Intn(5000) + 1000, // 1MB to 6MB mock size
-			Transcript:     "This is a mock transcription of the recorded audio: 'Hello World, NATS is great!'",
-			RelatedCommand: "Command: A47-V2.0, SampleRate: 44100Hz",
+			SizeKB:         len(cmd.Body) / 1024,
+			Transcript:     txt,
+			RelatedCommand: "(暂时假的)",
 		}
 
 		// 写入数据库
@@ -162,6 +178,8 @@ func commandHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	config.LoadConfigForMe()
+
 	if _, err := os.Stat("web/index.html"); os.IsNotExist(err) {
 		log.Fatal("web/index.html not found. Please create the frontend template.")
 	}

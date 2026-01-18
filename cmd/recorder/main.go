@@ -159,5 +159,6 @@ func ExampleWebIntegration() {
 }
 
 func main() {
+	// config.LoadConfigForMe()
 	Example()
 }

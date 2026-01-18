@@ -6,6 +6,7 @@ require (
 	github.com/denisbrodbeck/machineid v1.0.1
 	github.com/mattn/go-sqlite3 v1.14.33
 	github.com/nats-io/nats.go v1.48.0
+	gopkg.in/ini.v1 v1.67.1
 )
 
 require (

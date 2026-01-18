@@ -1,0 +1,7 @@
+supervisord binary from golang:
+
+https://github.com/ochinchina/supervisord/releases/download/v0.7.3/supervisord_0.7.3_Linux_ARMv7.tar.gz
+
+add to linux service:
+
+/root/supervisord -c  /root/supervisord.ini -d

@@ -226,6 +226,8 @@ func (a *Agent) handleUploadRecord(m *nats.Msg) {
 }
 
 func main() {
+	config.LoadConfigForMe()
+
 	agent := NewAgent()
 
 	// 1. Connect to NATS
@@ -241,7 +243,7 @@ func main() {
 	// 2. Subscribe to commands
 	nc.Subscribe(config.CmdStartRecord, agent.handleStartRecord)
 	nc.Subscribe(config.CmdStopRecord, agent.handleStopRecord)
-	nc.Subscribe(config.CmdUploadRecord, agent.handleUploadRecord) // Agent handles its own uploads
+	// nc.Subscribe(config.CmdUploadRecord, agent.handleUploadRecord) // Agent handles its own uploads
 
 	// 3. Start status reporting loop
 	go agent.statusReporter()
