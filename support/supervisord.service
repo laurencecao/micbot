@@ -1,0 +1,14 @@
+[Unit]
+Description=Supervisord (Go implementation)
+Documentation=https://github.com/ochinchina/supervisord
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/root/supervisord -c /root/supervisord.ini
+KillMode=process
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target
