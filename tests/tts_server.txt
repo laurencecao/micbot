@@ -1,0 +1,23 @@
+
+github:
+https://github.com/fishaudio/fish-speech
+参考：https://github.com/EvilFreelancer/docker-fish-speech-server
+
+install:
+uv pip install --index-url https://mirrors.aliyun.com/pypi/simple -e .
+
+models:
+https://huggingface.co/fishaudio/openaudio-s1-mini
+
+docker:
+https://hub.docker.com/r/fishaudio/fish-speech
+
+
+models download:
+export HF_ENDPOINT=https://hf-mirror.com
+hf download fishaudio/openaudio-s1-mini --local-dir fishaudio/openaudio-s1-mini
+
+
+launch api server:
+python -m tools.api_server --listen 0.0.0.0:8080 --llama-checkpoint-path "fishaudio/openaudio-s1-mini" --decoder-checkpoint-path fishaudio/openaudio-s1-mini/codec.pth --decoder-config-name modded_dac_vq
+
