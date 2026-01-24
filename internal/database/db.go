@@ -32,6 +32,8 @@ func InitDB() {
 		upload_time DATETIME,
 		size_kb INTEGER,
 		transcript TEXT,
+		dialogue TEXT,
+		medical_record TEXT,
 		related_command TEXT
 	);
 	`
@@ -82,10 +84,10 @@ func GetAllAgentStatuses() ([]models.AgentStatus, error) {
 
 func InsertRecording(r models.Recording) error {
 	const stmt = `
-	INSERT INTO recordings (file_name, upload_time, size_kb, transcript, related_command) 
-	VALUES (?, ?, ?, ?, ?);
+	INSERT INTO recordings (file_name, upload_time, size_kb, transcript, dialogue, medical_record, related_command) 
+	VALUES (?, ?, ?, ?, ?, ?, ?);
 	`
-	_, err := DB.Exec(stmt, r.FileName, r.UploadTime, r.SizeKB, r.Transcript, r.RelatedCommand)
+	_, err := DB.Exec(stmt, r.FileName, r.UploadTime, r.SizeKB, r.Transcript, r.Dialogue, r.MedicalRecord, r.RelatedCommand)
 	if err != nil {
 		return fmt.Errorf("failed to insert recording: %w", err)
 	}
@@ -94,7 +96,7 @@ func InsertRecording(r models.Recording) error {
 }
 
 func GetRecentRecordings(limit int) ([]models.Recording, error) {
-	rows, err := DB.Query("SELECT file_name, upload_time, size_kb, transcript, related_command FROM recordings ORDER BY upload_time DESC LIMIT ?", limit)
+	rows, err := DB.Query("SELECT file_name, upload_time, size_kb, transcript, dialogue, medical_record, related_command FROM recordings ORDER BY upload_time DESC LIMIT ?", limit)
 	if err != nil {
 		return nil, err
 	}
@@ -104,7 +106,7 @@ func GetRecentRecordings(limit int) ([]models.Recording, error) {
 	for rows.Next() {
 		var r models.Recording
 		// Note: ID is auto-incremented, no need to read it here
-		if err := rows.Scan(&r.FileName, &r.UploadTime, &r.SizeKB, &r.Transcript, &r.RelatedCommand); err != nil {
+		if err := rows.Scan(&r.FileName, &r.UploadTime, &r.SizeKB, &r.Transcript, &r.Dialogue, &r.MedicalRecord, &r.RelatedCommand); err != nil {
 			return nil, err
 		}
 		recordings = append(recordings, r)

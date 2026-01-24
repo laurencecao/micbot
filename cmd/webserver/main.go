@@ -89,6 +89,8 @@ func subscribeUploadRecord() {
 			UploadTime:     time.Now(),
 			SizeKB:         len(cmd.Body) / 1024,
 			Transcript:     txt,
+			Dialogue:       "",  // 初始化空字符串
+			MedicalRecord:  "",  // 初始化空字符串
 			RelatedCommand: "(暂时假的)",
 		}
 

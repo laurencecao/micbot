@@ -24,6 +24,8 @@ type Recording struct {
 	UploadTime     time.Time `json:"upload_time"`
 	SizeKB         int       `json:"size_kb"`
 	Transcript     string    `json:"transcript"`
+	Dialogue       string    `json:"dialogue"`
+	MedicalRecord  string    `json:"medical_record"`
 	RelatedCommand string    `json:"related_command"`
 }
 
