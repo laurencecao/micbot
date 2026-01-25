@@ -4,13 +4,14 @@ import os
 import shutil
 import subprocess
 import glob
+import sys
 
 # 配置项
 API_URL = "http://localhost:8080/v1/tts"
-INPUT_FILE = "input.txt"
+INPUT_FILE = sys.argv[1] #"input.txt"
 OUTPUT_DIR = "outputs"
-FINAL_OUTPUT = "final_output.wav"
-FINAL_MP3 = "final_output.mp3"  # Add this
+FINAL_OUTPUT = f'{sys.argv[1]}.wav' #"final_output.wav"
+FINAL_MP3 = f'{sys.argv[1]}.mp3' #"final_output.mp3"  # Add this
 
 SPEAKERS = {
     "Speaker 0": {
