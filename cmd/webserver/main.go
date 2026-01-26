@@ -21,6 +21,16 @@ import (
 	"github.com/nats-io/nats.go"
 )
 
+var (
+	reBold1 = regexp.MustCompile(`\*\*(.+?)\*\*`)
+	reBold2 = regexp.MustCompile(`__(.+?)__`)
+	// Use \S to ensure the first character after * is not a space
+	reItalic1 = regexp.MustCompile(`\*(\S.+?)\*`)
+	reItalic2 = regexp.MustCompile(`_(\S.+?)_`)
+	reCode    = regexp.MustCompile("`([^`]+?)`")
+	reLink    = regexp.MustCompile(`\[([^\]]+?)\]\(([^)]+?)\)`)
+)
+
 // markdownToHTML将markdown格式的文本转换为HTML
 func markdownToHTML(markdown string) string {
 	if markdown == "" {
@@ -160,21 +170,12 @@ func markdownToHTML(markdown string) string {
 // processInlineMarkdown处理行内markdown格式
 func processInlineMarkdown(text string) string {
 	result := html.EscapeString(text)
-
-	// 粗体
-	result = regexp.MustCompile(`\*\*(.+?)\*\*`).ReplaceAllString(result, "<strong>$1</strong>")
-	result = regexp.MustCompile(`__(.+?)__`).ReplaceAllString(result, "<strong>$1</strong>")
-
-	// 斜体
-	result = regexp.MustCompile(`\*(?!\s)(.+?)\*`).ReplaceAllString(result, "<em>$1</em>")
-	result = regexp.MustCompile(`_(?!\s)(.+?)_`).ReplaceAllString(result, "<em>$1</em>")
-
-	// 代码
-	result = regexp.MustCompile("`([^`]+?)`").ReplaceAllString(result, "<code>$1</code>")
-
-	// 链接
-	result = regexp.MustCompile(`\[([^\]]+?)\]\(([^)]+?)\)`).ReplaceAllString(result, `<a href="$2" target="_blank">$1</a>`)
-
+	result = reBold1.ReplaceAllString(result, "<strong>$1</strong>")
+	result = reBold2.ReplaceAllString(result, "<strong>$1</strong>")
+	result = reItalic1.ReplaceAllString(result, "<em>$1</em>")
+	result = reItalic2.ReplaceAllString(result, "<em>$1</em>")
+	result = reCode.ReplaceAllString(result, "<code>$1</code>")
+	result = reLink.ReplaceAllString(result, `<a href="$2" target="_blank">$1</a>`)
 	return result
 }
 
