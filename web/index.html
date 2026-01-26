@@ -15,6 +15,61 @@
         .status-idle { background-color: #ddffdd; }
         .dialogue-grey { background-color: #f5f5f5; }
         .dialogue-white { background-color: #ffffff; }
+        /* 医疗记录HTML样式 */
+        .medical-record { 
+            max-height: 300px; 
+            overflow-y: auto; 
+            font-size: 14px; 
+            line-height: 1.5; 
+            padding: 8px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            background-color: #fafafa;
+        }
+        .medical-record h1, .medical-record h2, .medical-record h3, .medical-record h4, .medical-record h5, .medical-record h6 {
+            margin-top: 12px;
+            margin-bottom: 8px;
+            color: #1a1a1a;
+        }
+        .medical-record h1 { font-size: 1.5em; }
+        .medical-record h2 { font-size: 1.3em; }
+        .medical-record h3 { font-size: 1.2em; }
+        .medical-record h4 { font-size: 1.1em; }
+        .medical-record p { margin: 8px 0; }
+        .medical-record ul, .medical-record ol { 
+            margin: 8px 0 8px 20px; 
+            padding-left: 20px;
+        }
+        .medical-record li { margin: 4px 0; }
+        .medical-record blockquote {
+            margin: 8px 0;
+            padding: 8px 12px;
+            border-left: 4px solid #4a90e2;
+            background-color: #f0f7ff;
+            color: #333;
+            font-style: italic;
+        }
+        .medical-record code {
+            font-family: 'Courier New', monospace;
+            background-color: #f5f5f5;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+        .medical-record pre {
+            background-color: #f5f5f5;
+            padding: 12px;
+            border-radius: 4px;
+            overflow-x: auto;
+            margin: 12px 0;
+        }
+        .medical-record a {
+            color: #007BFF;
+            text-decoration: none;
+        }
+        .medical-record a:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
@@ -153,7 +208,11 @@
                 const formattedDialogue = formatDialogueWithColors(record.dialogue);
                 dialogueCell.innerHTML = formattedDialogue;
                 
-                row.insertCell().textContent = record.medical_record;
+                // 处理Medical Record列：已经是HTML格式，直接使用innerHTML
+                const medicalRecordCell = row.insertCell();
+                // 包装在div中以应用样式
+                medicalRecordCell.innerHTML = `<div class="medical-record">${record.medical_record}</div>`;
+                
                 row.insertCell().textContent = record.related_command;
             });
         } else {

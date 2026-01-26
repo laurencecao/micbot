@@ -3,10 +3,12 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"html"
 	"html/template"
 	"log"
 	"net/http"
 	"os"
+	"regexp"
 	"strings"
 	"time"
 
@@ -18,6 +20,171 @@ import (
 
 	"github.com/nats-io/nats.go"
 )
+
+// markdownToHTML将markdown格式的文本转换为HTML
+func markdownToHTML(markdown string) string {
+	if markdown == "" {
+		return ""
+	}
+
+	var result strings.Builder
+	lines := strings.Split(markdown, "\n")
+	inParagraph := false
+
+	for i := 0; i < len(lines); i++ {
+		line := lines[i]
+		trimmedLine := strings.TrimSpace(line)
+
+		if trimmedLine == "" {
+			if inParagraph {
+				result.WriteString("</p>")
+				inParagraph = false
+			}
+			result.WriteString("<br>")
+			continue
+		}
+
+		if strings.HasPrefix(trimmedLine, "#") {
+			if inParagraph {
+				result.WriteString("</p>")
+				inParagraph = false
+			}
+
+			level := 0
+			for _, ch := range trimmedLine {
+				if ch == '#' {
+					level++
+				} else {
+					break
+				}
+			}
+			if level > 6 {
+				level = 6
+			}
+			content := strings.TrimSpace(trimmedLine[level:])
+			result.WriteString(fmt.Sprintf("<h%d>%s</h%d>", level, html.EscapeString(content), level))
+			continue
+		}
+
+		if strings.HasPrefix(trimmedLine, "- ") || strings.HasPrefix(trimmedLine, "* ") {
+			if inParagraph {
+				result.WriteString("</p>")
+				inParagraph = false
+			}
+
+			if i == 0 || !strings.HasPrefix(strings.TrimSpace(lines[i-1]), "- ") && !strings.HasPrefix(strings.TrimSpace(lines[i-1]), "* ") {
+				result.WriteString("<ul>")
+			}
+
+			content := strings.TrimSpace(trimmedLine[2:])
+			result.WriteString(fmt.Sprintf("<li>%s</li>", processInlineMarkdown(content)))
+
+			if i+1 >= len(lines) || (!strings.HasPrefix(strings.TrimSpace(lines[i+1]), "- ") &&
+				!strings.HasPrefix(strings.TrimSpace(lines[i+1]), "* ")) {
+				result.WriteString("</ul>")
+			}
+			continue
+		}
+
+		if match := regexp.MustCompile(`^(\d+)\.\s+`).FindStringSubmatch(trimmedLine); match != nil {
+			if inParagraph {
+				result.WriteString("</p>")
+				inParagraph = false
+			}
+
+			if i == 0 || !regexp.MustCompile(`^\d+\.\s+`).MatchString(strings.TrimSpace(lines[i-1])) {
+				result.WriteString("<ol>")
+			}
+
+			content := regexp.MustCompile(`^\d+\.\s+`).ReplaceAllString(trimmedLine, "")
+			result.WriteString(fmt.Sprintf("<li>%s</li>", processInlineMarkdown(content)))
+
+			if i+1 >= len(lines) || !regexp.MustCompile(`^\d+\.\s+`).MatchString(strings.TrimSpace(lines[i+1])) {
+				result.WriteString("</ol>")
+			}
+			continue
+		}
+
+		if strings.HasPrefix(trimmedLine, "> ") {
+			if inParagraph {
+				result.WriteString("</p>")
+				inParagraph = false
+			}
+
+			content := strings.TrimSpace(trimmedLine[2:])
+			result.WriteString(fmt.Sprintf("<blockquote>%s</blockquote>", html.EscapeString(content)))
+			continue
+		}
+
+		if strings.HasPrefix(trimmedLine, "```") {
+			if inParagraph {
+				result.WriteString("</p>")
+				inParagraph = false
+			}
+
+			lang := ""
+			if len(trimmedLine) > 3 {
+				lang = strings.TrimSpace(trimmedLine[3:])
+			}
+			result.WriteString(fmt.Sprintf("<pre%s><code>", formatCodeClass(lang)))
+
+			for i++; i < len(lines); i++ {
+				if strings.HasPrefix(strings.TrimSpace(lines[i]), "```") {
+					break
+				}
+				result.WriteString(html.EscapeString(lines[i]))
+				result.WriteString("\n")
+			}
+
+			result.WriteString("</code></pre>")
+			continue
+		}
+
+		if !inParagraph {
+			result.WriteString("<p>")
+			inParagraph = true
+		} else {
+			result.WriteString(" ")
+		}
+
+		result.WriteString(processInlineMarkdown(line))
+	}
+
+	if inParagraph {
+		result.WriteString("</p>")
+	}
+
+	return result.String()
+}
+
+// processInlineMarkdown处理行内markdown格式
+func processInlineMarkdown(text string) string {
+	result := html.EscapeString(text)
+
+	// 粗体
+	result = regexp.MustCompile(`\*\*(.+?)\*\*`).ReplaceAllString(result, "<strong>$1</strong>")
+	result = regexp.MustCompile(`__(.+?)__`).ReplaceAllString(result, "<strong>$1</strong>")
+
+	// 斜体
+	result = regexp.MustCompile(`\*(?!\s)(.+?)\*`).ReplaceAllString(result, "<em>$1</em>")
+	result = regexp.MustCompile(`_(?!\s)(.+?)_`).ReplaceAllString(result, "<em>$1</em>")
+
+	// 代码
+	result = regexp.MustCompile("`([^`]+?)`").ReplaceAllString(result, "<code>$1</code>")
+
+	// 链接
+	result = regexp.MustCompile(`\[([^\]]+?)\]\(([^)]+?)\)`).ReplaceAllString(result, `<a href="$2" target="_blank">$1</a>`)
+
+	return result
+}
+
+// formatCodeClass格式化代码块的语言类
+func formatCodeClass(lang string) string {
+	if lang == "" {
+		return ""
+	}
+	return fmt.Sprintf(" class=\"language-%s\"", html.EscapeString(lang))
+}
 
 // extractTextFromTranscript 从Transcript JSON字符串中提取并合并所有text字段
 func extractTextFromTranscript(transcript string) string {
@@ -57,14 +224,88 @@ func filterThinkFromMedicalRecord(medicalRecord string) string {
 		return ""
 	}
 
+	// 首先过滤 <think>...</think> 标签及其内容
+	// 使用正则表达式匹配 所有 <think> 和 </think> 之间的内容（包括标签）
+	// 注意：需要处理多行匹配和嵌套标签的情况
+	filteredText := ""
+
+	insideThink := false
+	var result strings.Builder
+
+	// 按行处理，但需要跨行处理think标签
+	lines := strings.Split(medicalRecord, "\n")
+
+	for i := 0; i < len(lines); i++ {
+		line := lines[i]
+
+		if !insideThink {
+			// 检查是否开始think标签
+			if strings.Contains(line, "<think>") {
+				// 找到 <think> 标签开始位置
+				startPos := strings.Index(line, "<think>")
+
+				if startPos >= 0 {
+					// 将think标签之前的内容写入结果
+					result.WriteString(line[:startPos])
+
+					// 检查think标签内是否有闭合标签
+					remainingLine := line[startPos+len("<think>"):]
+
+					// 检查是否有闭合标签在同一行
+					endPos := strings.Index(remainingLine, "</think>")
+					if endPos >= 0 {
+						// 同一行中闭合了think标签
+						// 跳过think标签内的内容，继续写入think标签之后的内容
+						result.WriteString(remainingLine[endPos+len("</think>"):])
+						if i < len(lines)-1 {
+							result.WriteString("\n")
+						}
+						// 继续处理下一行
+						continue
+					} else {
+						// 没有在同一行找到闭合标签，进入think模式
+						insideThink = true
+						// 继续处理下一行
+						continue
+					}
+				}
+			} else {
+				// 没有think标签，直接写入整行
+				result.WriteString(line)
+				if i < len(lines)-1 {
+					result.WriteString("\n")
+				}
+			}
+		} else {
+			// 在think标签内，检查是否结束
+			endPos := strings.Index(line, "</think>")
+			if endPos >= 0 {
+				// 找到闭合标签
+				// 跳过think标签内的内容和关闭标签
+				remainingLine := line[endPos+len("</think>"):]
+				if remainingLine != "" {
+					result.WriteString(remainingLine)
+				}
+				if i < len(lines)-1 {
+					result.WriteString("\n")
+				}
+				insideThink = false
+			} else {
+				// 还没结束，继续在think内，跳过这一行
+				continue
+			}
+		}
+	}
+
+	filteredText = result.String()
+
 	// 过滤常见think模式：
 	// 1. think: 开头的内容
 	// 2. thought: 开头的内容
-	// 3. <think>...</think> 格式的内容
-	// 4. {think: ...} JSON格式的内容
+	// 3. {think: ...} JSON格式的内容
 
-	lines := strings.Split(medicalRecord, "\n")
-	var filteredLines []string
+	lines = strings.Split(filteredText, "\n")
+	var finalFilteredLines []string
 
 	for _, line := range lines {
 		trimmedLine := strings.TrimSpace(line)
@@ -74,17 +315,16 @@ func filterThinkFromMedicalRecord(medicalRecord string) string {
 			strings.HasPrefix(trimmedLine, "thought:") ||
 			strings.HasPrefix(trimmedLine, "思考:") ||
 			strings.HasPrefix(trimmedLine, "内部思考:") ||
-			strings.HasPrefix(trimmedLine, "<think>") ||
 			strings.HasPrefix(trimmedLine, "```thinking") ||
 			strings.Contains(trimmedLine, "{think:") {
 			continue
 		}
 
 		// 如果不是think相关的行，保留
-		filteredLines = append(filteredLines, line)
+		finalFilteredLines = append(finalFilteredLines, line)
 	}
 
-	return strings.Join(filteredLines, "\n")
+	return strings.Join(finalFilteredLines, "\n")
 }
 
 var (
@@ -258,7 +498,10 @@ func apiHistoryHandler(w http.ResponseWriter, r *http.Request) {
 		processedRecord.Transcript = extractTextFromTranscript(record.Transcript)
 
 		// 2. 过滤MedicalRecord中的think部分
-		processedRecord.MedicalRecord = filterThinkFromMedicalRecord(record.MedicalRecord)
+		cleanedMedicalRecord := filterThinkFromMedicalRecord(record.MedicalRecord)
+
+		// 3. 将markdown转换为HTML格式
+		processedRecord.MedicalRecord = markdownToHTML(cleanedMedicalRecord)
 
 		processedHistory[i] = processedRecord
 	}
