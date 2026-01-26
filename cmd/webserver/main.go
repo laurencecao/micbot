@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"html"
 	"html/template"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -442,26 +443,14 @@ func subscribeUploadRecord() {
 			log.Printf("DB error inserting new recording: %v", err)
 		}
 
-		// 调用Baichuan服务生成病历记录
-		go func() {
-			log.Println("开始调用Baichuan服务生成病历记录...")
-
-			medicalRecordText, err := baichuan.GenerateMedicalRecord(speakerResult.Transcript, "")
-			if err != nil {
-				log.Printf("Baichuan服务调用失败: %v", err)
-				medicalRecordText = fmt.Sprintf("Baichuan服务调用失败: %v", err)
-			} else {
-				log.Println("Baichuan服务调用成功")
-			}
-
-			// 更新数据库中的病历记录字段
-			err = database.UpdateRecordingMedicalRecord(cmd.Payload, medicalRecordText)
-			if err != nil {
-				log.Printf("更新病历记录到数据库失败: %v", err)
-			} else {
-				log.Printf("成功更新病历记录到数据库，文件名: %s", cmd.Payload)
-			}
-		}()
+		// 不再自动调用Baichuan服务，等待用户上传医学检验结果
+		// 将相关命令标记为等待医学检验结果
+		err = database.UpdateRecordingMedicalRecord(cmd.Payload, "等待上传医学检验结果")
+		if err != nil {
+			log.Printf("更新相关命令字段失败: %v", err)
+		} else {
+			log.Printf("录音处理完成，等待医学检验结果上传，文件名: %s", cmd.Payload)
+		}
 	})
 }
 
@@ -511,6 +500,94 @@ func apiHistoryHandler(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewEncoder(w).Encode(processedHistory); err != nil {
 		log.Printf("Error encoding history JSON: %v", err)
 	}
+}
+
+func uploadMedicalChecksHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	err := r.ParseMultipartForm(10 << 20)
+	if err != nil {
+		http.Error(w, "Failed to parse form", http.StatusBadRequest)
+		return
+	}
+
+	fileName := r.FormValue("file_name")
+	if fileName == "" {
+		http.Error(w, "File name is required", http.StatusBadRequest)
+		return
+	}
+
+	file, _, err := r.FormFile("medical_checks_file")
+	if err != nil {
+		http.Error(w, "Failed to get file", http.StatusBadRequest)
+		return
+	}
+	defer file.Close()
+
+	fileBytes, err := io.ReadAll(file)
+	if err != nil {
+		http.Error(w, "Failed to read file", http.StatusInternalServerError)
+		return
+	}
+
+	fileContent := string(fileBytes)
+	medicalChecksHTML := markdownToHTML(fileContent)
+
+	err = database.UpdateRecordingMedicalChecks(fileName, medicalChecksHTML)
+	if err != nil {
+		log.Printf("Failed to update medical checks in database: %v", err)
+		http.Error(w, "Failed to update medical checks", http.StatusInternalServerError)
+		return
+	}
+
+	recordings, err := database.GetRecentRecordings(100)
+	if err != nil {
+		log.Printf("Failed to get recordings: %v", err)
+		http.Error(w, "Failed to get dialogue", http.StatusInternalServerError)
+		return
+	}
+
+	var dialogue string
+	for _, rec := range recordings {
+		if rec.FileName == fileName {
+			dialogue = rec.Dialogue
+			break
+		}
+	}
+
+	if dialogue == "" {
+		log.Printf("No dialogue found for file: %s", fileName)
+		http.Error(w, "No dialogue found for this file", http.StatusNotFound)
+		return
+	}
+
+	go func(dialogueText string, medicalChecksText string, fileName string) {
+		log.Println("开始调用Baichuan服务生成病历记录，包含医学检验结果...")
+
+		medicalRecordText, err := baichuan.GenerateMedicalRecord(dialogueText, medicalChecksText)
+		if err != nil {
+			log.Printf("Baichuan服务调用失败: %v", err)
+			medicalRecordText = fmt.Sprintf("Baichuan服务调用失败: %v\n\n医学检验结果:\n%s", err, medicalChecksText)
+		} else {
+			log.Println("Baichuan服务调用成功")
+		}
+
+		err = database.UpdateRecordingMedicalRecord(fileName, medicalRecordText)
+		if err != nil {
+			log.Printf("更新病历记录到数据库失败: %v", err)
+		} else {
+			log.Printf("成功更新病历记录到数据库，文件名: %s", fileName)
+		}
+	}(dialogue, fileContent, fileName)
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{
+		"status":  "success",
+		"message": "Medical checks uploaded successfully and sent to Baichuan for processing",
+	})
 }
 
 // homeHandler 仅用于渲染初始 HTML 结构
@@ -579,6 +656,7 @@ func main() {
 	http.HandleFunc("/api/command", commandHandler)
 	http.HandleFunc("/api/status", apiStatusHandler)
 	http.HandleFunc("/api/history", apiHistoryHandler)
+	http.HandleFunc("/api/upload_medical_checks", uploadMedicalChecksHandler)
 
 	port := ":8080"
 	log.Printf("Web Server running on http://localhost%s", port)

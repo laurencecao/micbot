@@ -25,6 +25,7 @@ type Recording struct {
 	SizeKB         int       `json:"size_kb"`
 	Transcript     string    `json:"transcript"`
 	Dialogue       string    `json:"dialogue"`
+	MedicalChecks  string    `json:"medical_checks"` // 新增：医学检验结果
 	MedicalRecord  string    `json:"medical_record"`
 	RelatedCommand string    `json:"related_command"`
 }

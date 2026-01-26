@@ -120,13 +120,14 @@
                     <th>Size (KB)</th>
                     <th>Transcript</th>
                     <th>Dialogue</th>
+                    <th>Medical Checks</th>
                     <th>Medical Record</th>
                     <th>Related Command</th>
                 </tr>
             </thead>
             <!-- 使用 ID 方便 JavaScript 找到并更新 -->
             <tbody id="recording-history-body">
-                <tr><td colspan="7">正在加载历史记录...</td></tr>
+                <tr><td colspan="8">正在加载历史记录...</td></tr>
             </tbody>
         </table>
     </div>
@@ -197,7 +198,7 @@
             data.forEach(record => {
                 const row = tbody.insertRow();
                 
-                // 对应字段: FileName, UploadTime, SizeKB, Transcript, Dialogue, MedicalRecord
+                // 对应字段: FileName, UploadTime, SizeKB, Transcript, Dialogue, MedicalChecks, MedicalRecord
                 row.insertCell().textContent = record.file_name;
                 row.insertCell().textContent = formatTime(record.upload_time);
                 row.insertCell().textContent = record.size_kb;
@@ -207,6 +208,29 @@
                 const dialogueCell = row.insertCell();
                 const formattedDialogue = formatDialogueWithColors(record.dialogue);
                 dialogueCell.innerHTML = formattedDialogue;
+                
+                // 处理Medical Checks列：上传按钮 + 显示医学检验结果
+                const medicalChecksCell = row.insertCell();
+                const fileName = record.file_name;
+                
+                let medicalChecksContent = '';
+                if (record.medical_checks && record.medical_checks.trim() !== '') {
+                    // 如果已经有医学检验结果，显示为HTML格式
+                    medicalChecksContent = `<div class="medical-record">${record.medical_checks}</div>`;
+                }
+                
+                // 添加上传按钮
+                medicalChecksContent += `
+                    <div style="margin-top: 10px;">
+                        <input type="file" id="file-input-${fileName.replace(/[^a-zA-Z0-9]/g, '-')}" accept=".txt,.md,.pdf,.doc,.docx" style="display: none;">
+                        <button onclick="uploadMedicalChecks('${fileName}')" style="background-color: #4CAF50; color: white; padding: 5px 10px; border: none; border-radius: 3px; cursor: pointer;">
+                            上传医学检验结果
+                        </button>
+                        <span id="upload-status-${fileName.replace(/[^a-zA-Z0-9]/g, '-')}" style="margin-left: 10px; font-size: 12px;"></span>
+                    </div>
+                `;
+                
+                medicalChecksCell.innerHTML = medicalChecksContent;
                 
                 // 处理Medical Record列：已经是HTML格式，直接使用innerHTML
                 const medicalRecordCell = row.insertCell();
@@ -218,7 +242,7 @@
         } else {
             const row = tbody.insertRow();
             const cell = row.insertCell();
-            cell.colSpan = 7; 
+            cell.colSpan = 8; 
             cell.textContent = "没有找到录音历史记录。";
         }
         document.getElementById('history-feedback').textContent = ''; // 清除反馈信息
@@ -289,10 +313,63 @@
                 // 指令发送成功后，立即触发历史记录刷新，因为 stop_record 会触发上传日志
                 fetchHistory(); 
             })
+             .catch(error => {
+                 console.error('Error:', error);
+                 feedback.textContent = `指令失败: ${error}`;
+             });
+     }
+
+    // --- Medical Checks Upload Logic ---
+
+    function uploadMedicalChecks(fileName) {
+        const safeFileName = fileName.replace(/[^a-zA-Z0-9]/g, '-');
+        const fileInput = document.getElementById(`file-input-${safeFileName}`);
+        const statusSpan = document.getElementById(`upload-status-${safeFileName}`);
+        
+        // 触发文件选择
+        fileInput.click();
+        
+        // 当文件被选择后
+        fileInput.onchange = function() {
+            if (!fileInput.files || fileInput.files.length === 0) {
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            statusSpan.textContent = '上传中...';
+            statusSpan.style.color = 'blue';
+            
+            // 创建FormData对象
+            const formData = new FormData();
+            formData.append('file_name', fileName);
+            formData.append('medical_checks_file', file);
+            
+            // 发送上传请求
+            fetch('/api/upload_medical_checks', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.text().then(text => { throw new Error(text) });
+                }
+                return response.json();
+            })
+            .then(data => {
+                statusSpan.textContent = '上传成功，正在处理...';
+                statusSpan.style.color = 'green';
+                
+                // 等待5秒后刷新历史记录以显示更新后的医学检验结果
+                setTimeout(() => {
+                    fetchHistory();
+                }, 5000);
+            })
             .catch(error => {
-                console.error('Error:', error);
-                feedback.textContent = `指令失败: ${error}`;
+                console.error('Upload error:', error);
+                statusSpan.textContent = `上传失败: ${error.message || error}`;
+                statusSpan.style.color = 'red';
             });
+        };
     }
 </script>
 
