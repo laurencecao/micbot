@@ -14,9 +14,12 @@ import (
 )
 
 type Response struct {
-	Filename string `json:"filename"`
-	Success  bool   `json:"success"`
-	Text     string `json:"text"`
+	Filename     string `json:"filename,omitempty"`
+	Success      bool   `json:"success,omitempty"`
+	Text         string `json:"text,omitempty"`
+	RawSegments  string `json:"raw_segments,omitempty"`
+	Transcript   string `json:"transcript,omitempty"`
+	DetectedLang string `json:"detected_language,omitempty"`
 }
 
 func parseResult(jsonStr string) (Response, error) {
@@ -26,6 +29,7 @@ func parseResult(jsonStr string) (Response, error) {
 		fmt.Printf("解析JSON失败: %v\n", err)
 		return resp, err
 	}
+	resp.Success = true
 	return resp, nil
 }
 

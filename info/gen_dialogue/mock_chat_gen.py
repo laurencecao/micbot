@@ -24,6 +24,9 @@ SPEAKERS = {
     }
 }
 
+SPEAKERS.update({k.upper(): v for k, v in SPEAKERS.items()})
+SPEAKERS.update({k.lower(): v for k, v in SPEAKERS.items()})
+
 def clean_and_prepare_dir():
     if os.path.exists(OUTPUT_DIR):
         shutil.rmtree(OUTPUT_DIR)

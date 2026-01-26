@@ -80,7 +80,7 @@ func subscribeUploadRecord() {
 		fmt.Printf("转录结果: %v\n", result)
 		txt := "转写失败了！"
 		if result.Success {
-			txt = result.Text
+			txt = result.RawSegments
 		}
 
 		// MOCK: Generate metadata for the DB
@@ -89,8 +89,8 @@ func subscribeUploadRecord() {
 			UploadTime:     time.Now(),
 			SizeKB:         len(cmd.Body) / 1024,
 			Transcript:     txt,
-			Dialogue:       "",  // 初始化空字符串
-			MedicalRecord:  "",  // 初始化空字符串
+			Dialogue:       result.Transcript, // 初始化空字符串
+			MedicalRecord:  "",                // 初始化空字符串
 			RelatedCommand: "(暂时假的)",
 		}
 

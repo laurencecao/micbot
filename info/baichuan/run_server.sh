@@ -1,7 +1,11 @@
 #!/bin/bash
 
+# 1. launch sglang server for baichuan LLM
 python -m sglang.launch_server --tp 1 --model-path Baichuan-M2-32B-GPTQ-Int4 --reasoning-parser qwen3 --kv-cache-dtype fp8_e4m3 --attention-backend flashinfer --max-prefill-tokens 64000
 #--max-total-tokens 32000
+
+# 2. launch http api server for baichuan service
+python main.py
 
 #SGLANG_ALLOW_OVERWRITE_LONGER_CONTEXT_LEN=1 python3 -m sglang.launch_server \
 #       --model Baichuan-M2-32B-GPTQ-Int4 \
