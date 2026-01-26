@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"medishare.io/micbot/internal/asr"
+	"medishare.io/micbot/internal/baichuan"
 	"medishare.io/micbot/internal/config"
 	"medishare.io/micbot/internal/database"
 	"medishare.io/micbot/internal/models"
@@ -70,34 +71,87 @@ func subscribeUploadRecord() {
 		// 在这里处理transcribe
 		log.Println("假装在跟ASR模型交互，转写中......", len(cmd.Body))
 
-		// 调用转录函数
-		result, err := asr.Transcribe(cmd.Body)
+		// 调用新的转录函数（包含说话者识别）
+		speakerResult, err := asr.TranscribeWithSpeaker(cmd.Body)
 		if err != nil {
-			fmt.Printf("转录失败: %v\n", err)
+			fmt.Printf("带说话者识别的转录失败: %v\n", err)
+			// 如果新服务失败，尝试使用旧服务作为备选
+			oldResult, oldErr := asr.Transcribe(cmd.Body)
+			if oldErr != nil {
+				fmt.Printf("旧转录服务也失败: %v\n", oldErr)
+				return
+			}
+			
+			txt := "转写失败了！"
+			if oldResult.Success {
+				txt = oldResult.Text
+			}
+			
+			// MOCK: Generate metadata for the DB
+			newRecord := models.Recording{
+				FileName:       cmd.Payload,
+				UploadTime:     time.Now(),
+				SizeKB:         len(cmd.Body) / 1024,
+				Transcript:     txt,
+				Dialogue:       "",  // 初始化空字符串
+				MedicalRecord:  "",  // 初始化空字符串
+				RelatedCommand: "(暂时假的，新ASR服务失败)",
+			}
+			
+			// 写入数据库
+			if err := database.InsertRecording(newRecord); err != nil {
+				log.Printf("DB error inserting new recording: %v", err)
+			}
 			return
 		}
 
-		fmt.Printf("转录结果: %v\n", result)
-		txt := "转写失败了！"
-		if result.Success {
-			txt = result.RawSegments
+		fmt.Printf("带说话者识别的转录结果: %v\n", speakerResult)
+		
+		// 将raw_segments转换为字符串显示
+		rawSegmentsStr := ""
+		if speakerResult.RawSegments != nil && len(speakerResult.RawSegments) > 0 {
+			segmentsBytes, err := json.Marshal(speakerResult.RawSegments)
+			if err == nil {
+				rawSegmentsStr = string(segmentsBytes)
+			}
 		}
 
-		// MOCK: Generate metadata for the DB
+		// 使用新的ASR结果填充数据库记录（先创建基础记录）
 		newRecord := models.Recording{
 			FileName:       cmd.Payload,
 			UploadTime:     time.Now(),
 			SizeKB:         len(cmd.Body) / 1024,
-			Transcript:     txt,
-			Dialogue:       result.Transcript, // 初始化空字符串
-			MedicalRecord:  "",                // 初始化空字符串
-			RelatedCommand: "(暂时假的)",
+			Transcript:     rawSegmentsStr,  // raw_segments放在Transcript列
+			Dialogue:       speakerResult.Transcript,  // 说话者识别的文本放在Dialogue列
+			MedicalRecord:  "",  // 初始化空字符串，后面会填充
+			RelatedCommand: "(新ASR服务完成，等待Baichuan处理)",
 		}
 
-		// 写入数据库
+		// 先插入基础记录到数据库
 		if err := database.InsertRecording(newRecord); err != nil {
 			log.Printf("DB error inserting new recording: %v", err)
 		}
+
+		// 调用Baichuan服务生成病历记录
+		go func() {
+			log.Println("开始调用Baichuan服务生成病历记录...")
+			
+			medicalRecordText, err := baichuan.GenerateMedicalRecord(speakerResult.Transcript, "")
+			if err != nil {
+				log.Printf("Baichuan服务调用失败: %v", err)
+				medicalRecordText = fmt.Sprintf("Baichuan服务调用失败: %v", err)
+			} else {
+				log.Println("Baichuan服务调用成功")
+			}
+
+			// 更新数据库中的病历记录字段
+			err = database.UpdateRecordingMedicalRecord(cmd.Payload, medicalRecordText)
+			if err != nil {
+				log.Printf("更新病历记录到数据库失败: %v", err)
+			} else {
+				log.Printf("成功更新病历记录到数据库，文件名: %s", cmd.Payload)
+			}
+		}()
 	})
 }
 
