@@ -11,8 +11,65 @@
         th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
         th { background-color: #f2f2f2; }
         button { padding: 10px 15px; margin-right: 10px; cursor: pointer; }
-        .status-recording { background-color: #ffdddd; }
+         .status-recording { background-color: #ffdddd; }
         .status-idle { background-color: #ddffdd; }
+        .dialogue-grey { background-color: #f5f5f5; }
+        .dialogue-white { background-color: #ffffff; }
+        /* 医疗记录HTML样式 */
+        .medical-record { 
+            max-height: 300px; 
+            overflow-y: auto; 
+            font-size: 14px; 
+            line-height: 1.5; 
+            padding: 8px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            background-color: #fafafa;
+        }
+        .medical-record h1, .medical-record h2, .medical-record h3, .medical-record h4, .medical-record h5, .medical-record h6 {
+            margin-top: 12px;
+            margin-bottom: 8px;
+            color: #1a1a1a;
+        }
+        .medical-record h1 { font-size: 1.5em; }
+        .medical-record h2 { font-size: 1.3em; }
+        .medical-record h3 { font-size: 1.2em; }
+        .medical-record h4 { font-size: 1.1em; }
+        .medical-record p { margin: 8px 0; }
+        .medical-record ul, .medical-record ol { 
+            margin: 8px 0 8px 20px; 
+            padding-left: 20px;
+        }
+        .medical-record li { margin: 4px 0; }
+        .medical-record blockquote {
+            margin: 8px 0;
+            padding: 8px 12px;
+            border-left: 4px solid #4a90e2;
+            background-color: #f0f7ff;
+            color: #333;
+            font-style: italic;
+        }
+        .medical-record code {
+            font-family: 'Courier New', monospace;
+            background-color: #f5f5f5;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+        .medical-record pre {
+            background-color: #f5f5f5;
+            padding: 12px;
+            border-radius: 4px;
+            overflow-x: auto;
+            margin: 12px 0;
+        }
+        .medical-record a {
+            color: #007BFF;
+            text-decoration: none;
+        }
+        .medical-record a:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
@@ -62,12 +119,15 @@
                     <th>Upload Time</th>
                     <th>Size (KB)</th>
                     <th>Transcript</th>
+                    <th>Dialogue</th>
+                    <th>Medical Checks</th>
+                    <th>Medical Record</th>
                     <th>Related Command</th>
                 </tr>
             </thead>
             <!-- 使用 ID 方便 JavaScript 找到并更新 -->
             <tbody id="recording-history-body">
-                <tr><td colspan="5">正在加载历史记录...</td></tr>
+                <tr><td colspan="8">正在加载历史记录...</td></tr>
             </tbody>
         </table>
     </div>
@@ -130,7 +190,7 @@
 
     // --- History Logic ---
 
-    function renderHistory(data) {
+     function renderHistory(data) {
         const tbody = document.getElementById('recording-history-body');
         tbody.innerHTML = ''; // 清空现有内容
 
@@ -138,20 +198,91 @@
             data.forEach(record => {
                 const row = tbody.insertRow();
                 
-                // 对应字段: FileName, UploadTime, SizeKB, Transcript
+                // 对应字段: FileName, UploadTime, SizeKB, Transcript, Dialogue, MedicalChecks, MedicalRecord
                 row.insertCell().textContent = record.file_name;
                 row.insertCell().textContent = formatTime(record.upload_time);
                 row.insertCell().textContent = record.size_kb;
                 row.insertCell().textContent = record.transcript;
+                
+                // 处理Dialogue列：为不同的speaker添加间隔背景色
+                const dialogueCell = row.insertCell();
+                const formattedDialogue = formatDialogueWithColors(record.dialogue);
+                dialogueCell.innerHTML = formattedDialogue;
+                
+                // 处理Medical Checks列：上传按钮 + 显示医学检验结果
+                const medicalChecksCell = row.insertCell();
+                const fileName = record.file_name;
+                
+                let medicalChecksContent = '';
+                if (record.medical_checks && record.medical_checks.trim() !== '') {
+                    // 如果已经有医学检验结果，显示为HTML格式
+                    medicalChecksContent = `<div class="medical-record">${record.medical_checks}</div>`;
+                }
+                
+                // 添加上传按钮
+                medicalChecksContent += `
+                    <div style="margin-top: 10px;">
+                        <input type="file" id="file-input-${fileName.replace(/[^a-zA-Z0-9]/g, '-')}" accept=".txt,.md,.pdf,.doc,.docx" style="display: none;">
+                        <button onclick="uploadMedicalChecks('${fileName}')" style="background-color: #4CAF50; color: white; padding: 5px 10px; border: none; border-radius: 3px; cursor: pointer;">
+                            上传医学检验结果
+                        </button>
+                        <span id="upload-status-${fileName.replace(/[^a-zA-Z0-9]/g, '-')}" style="margin-left: 10px; font-size: 12px;"></span>
+                    </div>
+                `;
+                
+                medicalChecksCell.innerHTML = medicalChecksContent;
+                
+                // 处理Medical Record列：已经是HTML格式，直接使用innerHTML
+                const medicalRecordCell = row.insertCell();
+                // 包装在div中以应用样式
+                medicalRecordCell.innerHTML = `<div class="medical-record">${record.medical_record}</div>`;
+                
                 row.insertCell().textContent = record.related_command;
             });
         } else {
             const row = tbody.insertRow();
             const cell = row.insertCell();
-            cell.colSpan = 5; 
+            cell.colSpan = 8; 
             cell.textContent = "没有找到录音历史记录。";
         }
         document.getElementById('history-feedback').textContent = ''; // 清除反馈信息
+    }
+
+    // formatDialogueWithColors 为Dialogue内容中的不同speaker添加间隔背景色
+    function formatDialogueWithColors(dialogueText) {
+        if (!dialogueText) {
+            return '';
+        }
+        
+        // 分割为行
+        const lines = dialogueText.split('\n');
+        let result = '<div style="font-family: monospace; white-space: pre-wrap;">';
+        let useGrey = true; // 起始颜色
+        
+        lines.forEach(line => {
+            const trimmedLine = line.trim();
+            if (trimmedLine === '') {
+                result += '<br>';
+                return;
+            }
+            
+            // 检测speaker行（包含"speaker"关键词）
+            if (trimmedLine.toLowerCase().includes('speaker') || 
+                trimmedLine.match(/^speaker\s+\d+/i)) {
+                // speaker行使用交替背景色
+                const className = useGrey ? 'dialogue-grey' : 'dialogue-white';
+                result += `<div class="${className}" style="padding: 2px 5px; margin: 1px 0;">${line}</div>`;
+                useGrey = !useGrey; // 切换颜色
+            } else {
+                // 非speaker行使用当前颜色
+                const className = useGrey ? 'dialogue-grey' : 'dialogue-white';
+                result += `<div class="${className}" style="padding: 2px 5px; margin: 1px 0;">${line}</div>`;
+                // 保持当前颜色（不切换）
+            }
+        });
+        
+        result += '</div>';
+        return result;
     }
 
     function fetchHistory() {
@@ -182,10 +313,63 @@
                 // 指令发送成功后，立即触发历史记录刷新，因为 stop_record 会触发上传日志
                 fetchHistory(); 
             })
+             .catch(error => {
+                 console.error('Error:', error);
+                 feedback.textContent = `指令失败: ${error}`;
+             });
+     }
+
+    // --- Medical Checks Upload Logic ---
+
+    function uploadMedicalChecks(fileName) {
+        const safeFileName = fileName.replace(/[^a-zA-Z0-9]/g, '-');
+        const fileInput = document.getElementById(`file-input-${safeFileName}`);
+        const statusSpan = document.getElementById(`upload-status-${safeFileName}`);
+        
+        // 触发文件选择
+        fileInput.click();
+        
+        // 当文件被选择后
+        fileInput.onchange = function() {
+            if (!fileInput.files || fileInput.files.length === 0) {
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            statusSpan.textContent = '上传中...';
+            statusSpan.style.color = 'blue';
+            
+            // 创建FormData对象
+            const formData = new FormData();
+            formData.append('file_name', fileName);
+            formData.append('medical_checks_file', file);
+            
+            // 发送上传请求
+            fetch('/api/upload_medical_checks', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.text().then(text => { throw new Error(text) });
+                }
+                return response.json();
+            })
+            .then(data => {
+                statusSpan.textContent = '上传成功，正在处理...';
+                statusSpan.style.color = 'green';
+                
+                // 等待5秒后刷新历史记录以显示更新后的医学检验结果
+                setTimeout(() => {
+                    fetchHistory();
+                }, 5000);
+            })
             .catch(error => {
-                console.error('Error:', error);
-                feedback.textContent = `指令失败: ${error}`;
+                console.error('Upload error:', error);
+                statusSpan.textContent = `上传失败: ${error.message || error}`;
+                statusSpan.style.color = 'red';
             });
+        };
     }
 </script>
 

@@ -1,0 +1,843 @@
+[
+    {
+        "end": 26.224,
+        "speaker": "SPEAKER_00",
+        "start": 0.824,
+        "text": "建议一调整与纠正工作劳动中不良姿势防寒防潮避免过分劳累局部保暖热敷二让腰部肌肉放松三加强腰部力量四药物治疗妙纳莫比可口服伏比洛分纸贴高外用五点缓解不理想可以去疼痛科做冲击波治疗或抵管注药治疗请问一下严重吗会不会引起瘫痪等严重问题会不会一直",
+        "words": [
+            {
+                "end": 1.526,
+                "score": 0.897,
+                "speaker": "SPEAKER_00",
+                "start": 0.824,
+                "word": "建"
+            },
+            {
+                "end": 1.546,
+                "score": 0,
+                "speaker": "SPEAKER_00",
+                "start": 1.526,
+                "word": "议"
+            },
+            {
+                "end": 1.566,
+                "score": 0.142,
+                "speaker": "SPEAKER_00",
+                "start": 1.546,
+                "word": "一"
+            },
+            {
+                "end": 1.786,
+                "score": 0.945,
+                "speaker": "SPEAKER_00",
+                "start": 1.566,
+                "word": "调"
+            },
+            {
+                "end": 1.927,
+                "score": 0.899,
+                "speaker": "SPEAKER_00",
+                "start": 1.786,
+                "word": "整"
+            },
+            {
+                "end": 2.107,
+                "score": 0.942,
+                "speaker": "SPEAKER_00",
+                "start": 1.927,
+                "word": "与"
+            },
+            {
+                "end": 2.308,
+                "score": 0.946,
+                "speaker": "SPEAKER_00",
+                "start": 2.107,
+                "word": "纠"
+            },
+            {
+                "end": 2.648,
+                "score": 0.938,
+                "speaker": "SPEAKER_00",
+                "start": 2.308,
+                "word": "正"
+            },
+            {
+                "end": 2.668,
+                "score": 0.98,
+                "speaker": "SPEAKER_00",
+                "start": 2.648,
+                "word": "工"
+            },
+            {
+                "end": 2.809,
+                "score": 0.995,
+                "speaker": "SPEAKER_00",
+                "start": 2.668,
+                "word": "作"
+            },
+            {
+                "end": 2.969,
+                "score": 0.938,
+                "speaker": "SPEAKER_00",
+                "start": 2.809,
+                "word": "劳"
+            },
+            {
+                "end": 3.129,
+                "score": 0.884,
+                "speaker": "SPEAKER_00",
+                "start": 2.969,
+                "word": "动"
+            },
+            {
+                "end": 3.33,
+                "score": 0.901,
+                "speaker": "SPEAKER_00",
+                "start": 3.129,
+                "word": "中"
+            },
+            {
+                "end": 3.43,
+                "score": 0.808,
+                "speaker": "SPEAKER_00",
+                "start": 3.33,
+                "word": "不"
+            },
+            {
+                "end": 3.631,
+                "score": 0.9,
+                "speaker": "SPEAKER_00",
+                "start": 3.43,
+                "word": "良"
+            },
+            {
+                "end": 3.811,
+                "score": 0.906,
+                "speaker": "SPEAKER_00",
+                "start": 3.631,
+                "word": "姿"
+            },
+            {
+                "end": 4.312,
+                "score": 0.962,
+                "speaker": "SPEAKER_00",
+                "start": 3.811,
+                "word": "势"
+            },
+            {
+                "end": 4.813,
+                "score": 0.92,
+                "speaker": "SPEAKER_00",
+                "start": 4.312,
+                "word": "防"
+            },
+            {
+                "end": 4.833,
+                "score": 0.044,
+                "speaker": "SPEAKER_00",
+                "start": 4.813,
+                "word": "寒"
+            },
+            {
+                "end": 5.034,
+                "score": 0.905,
+                "speaker": "SPEAKER_00",
+                "start": 4.833,
+                "word": "防"
+            },
+            {
+                "end": 5.575,
+                "score": 0.914,
+                "speaker": "SPEAKER_00",
+                "start": 5.034,
+                "word": "潮"
+            },
+            {
+                "end": 5.595,
+                "score": 0,
+                "speaker": "SPEAKER_00",
+                "start": 5.575,
+                "word": "避"
+            },
+            {
+                "end": 5.615,
+                "score": 0.025,
+                "speaker": "SPEAKER_00",
+                "start": 5.595,
+                "word": "免"
+            },
+            {
+                "end": 5.796,
+                "score": 0.929,
+                "speaker": "SPEAKER_00",
+                "start": 5.615,
+                "word": "过"
+            },
+            {
+                "end": 6.798,
+                "score": 0.936,
+                "speaker": "SPEAKER_00",
+                "start": 5.796,
+                "word": "分"
+            },
+            {
+                "end": 6.818,
+                "score": 0,
+                "speaker": "SPEAKER_00",
+                "start": 6.798,
+                "word": "劳"
+            },
+            {
+                "end": 6.838,
+                "score": 0,
+                "speaker": "SPEAKER_00",
+                "start": 6.818,
+                "word": "累"
+            },
+            {
+                "end": 6.858,
+                "score": 0.289,
+                "speaker": "SPEAKER_00",
+                "start": 6.838,
+                "word": "局"
+            },
+            {
+                "end": 7.019,
+                "score": 0.9,
+                "speaker": "SPEAKER_00",
+                "start": 6.858,
+                "word": "部"
+            },
+            {
+                "end": 7.339,
+                "score": 0.875,
+                "speaker": "SPEAKER_00",
+                "start": 7.019,
+                "word": "保"
+            },
+            {
+                "end": 7.359,
+                "score": 0.044,
+                "speaker": "SPEAKER_00",
+                "start": 7.339,
+                "word": "暖"
+            },
+            {
+                "end": 8.021,
+                "score": 0.912,
+                "speaker": "SPEAKER_00",
+                "start": 7.359,
+                "word": "热"
+            },
+            {
+                "end": 8.041,
+                "score": 0,
+                "speaker": "SPEAKER_00",
+                "start": 8.021,
+                "word": "敷"
+            },
+            {
+                "end": 8.061,
+                "score": 0.002,
+                "speaker": "SPEAKER_00",
+                "start": 8.041,
+                "word": "二"
+            },
+            {
+                "end": 8.462,
+                "score": 0.897,
+                "speaker": "SPEAKER_00",
+                "start": 8.061,
+                "word": "让"
+            },
+            {
+                "end": 8.482,
+                "score": 0.266,
+                "speaker": "SPEAKER_00",
+                "start": 8.462,
+                "word": "腰"
+            },
+            {
+                "end": 8.783,
+                "score": 0.846,
+                "speaker": "SPEAKER_00",
+                "start": 8.482,
+                "word": "部"
+            },
+            {
+                "end": 8.803,
+                "score": 0.068,
+                "speaker": "SPEAKER_00",
+                "start": 8.783,
+                "word": "肌"
+            },
+            {
+                "end": 8.983,
+                "score": 0.892,
+                "speaker": "SPEAKER_00",
+                "start": 8.803,
+                "word": "肉"
+            },
+            {
+                "end": 9.505,
+                "score": 0.927,
+                "speaker": "SPEAKER_00",
+                "start": 8.983,
+                "word": "放"
+            },
+            {
+                "end": 9.525,
+                "score": 0.417,
+                "speaker": "SPEAKER_00",
+                "start": 9.505,
+                "word": "松"
+            },
+            {
+                "end": 10.046,
+                "score": 0.991,
+                "speaker": "SPEAKER_00",
+                "start": 9.525,
+                "word": "三"
+            },
+            {
+                "end": 10.246,
+                "score": 0.997,
+                "speaker": "SPEAKER_00",
+                "start": 10.046,
+                "word": "加"
+            },
+            {
+                "end": 10.407,
+                "score": 0.876,
+                "speaker": "SPEAKER_00",
+                "start": 10.246,
+                "word": "强"
+            },
+            {
+                "end": 10.607,
+                "score": 0.897,
+                "speaker": "SPEAKER_00",
+                "start": 10.407,
+                "word": "腰"
+            },
+            {
+                "end": 10.687,
+                "score": 0.895,
+                "speaker": "SPEAKER_00",
+                "start": 10.607,
+                "word": "部"
+            },
+            {
+                "end": 10.828,
+                "score": 0.995,
+                "speaker": "SPEAKER_00",
+                "start": 10.687,
+                "word": "力"
+            },
+            {
+                "end": 11.449,
+                "score": 0.858,
+                "speaker": "SPEAKER_00",
+                "start": 10.828,
+                "word": "量"
+            },
+            {
+                "end": 11.469,
+                "score": 0.032,
+                "speaker": "SPEAKER_00",
+                "start": 11.449,
+                "word": "四"
+            },
+            {
+                "end": 11.75,
+                "score": 0.916,
+                "speaker": "SPEAKER_00",
+                "start": 11.469,
+                "word": "药"
+            },
+            {
+                "end": 11.77,
+                "score": 0.997,
+                "speaker": "SPEAKER_00",
+                "start": 11.75,
+                "word": "物"
+            },
+            {
+                "end": 11.87,
+                "score": 0.986,
+                "speaker": "SPEAKER_00",
+                "start": 11.77,
+                "word": "治"
+            },
+            {
+                "end": 12.472,
+                "score": 0.982,
+                "speaker": "SPEAKER_00",
+                "start": 11.87,
+                "word": "疗"
+            },
+            {
+                "end": 12.692,
+                "score": 0.948,
+                "speaker": "SPEAKER_00",
+                "start": 12.472,
+                "word": "妙"
+            },
+            {
+                "end": 13.153,
+                "score": 0.912,
+                "speaker": "SPEAKER_00",
+                "start": 12.692,
+                "word": "纳"
+            },
+            {
+                "end": 13.173,
+                "score": 0.018,
+                "speaker": "SPEAKER_00",
+                "start": 13.153,
+                "word": "莫"
+            },
+            {
+                "end": 13.534,
+                "score": 0.883,
+                "speaker": "SPEAKER_00",
+                "start": 13.173,
+                "word": "比"
+            },
+            {
+                "end": 13.554,
+                "score": 0.368,
+                "speaker": "SPEAKER_00",
+                "start": 13.534,
+                "word": "可"
+            },
+            {
+                "end": 14.516,
+                "score": 0.947,
+                "speaker": "SPEAKER_00",
+                "start": 13.554,
+                "word": "口"
+            },
+            {
+                "end": 14.536,
+                "score": 0,
+                "speaker": "SPEAKER_00",
+                "start": 14.516,
+                "word": "服"
+            },
+            {
+                "end": 14.556,
+                "score": 0.728,
+                "speaker": "SPEAKER_00",
+                "start": 14.536,
+                "word": "伏"
+            },
+            {
+                "end": 14.857,
+                "score": 0.908,
+                "speaker": "SPEAKER_00",
+                "start": 14.556,
+                "word": "比"
+            },
+            {
+                "end": 14.877,
+                "score": 0.862,
+                "speaker": "SPEAKER_00",
+                "start": 14.857,
+                "word": "洛"
+            },
+            {
+                "end": 15.078,
+                "score": 0.9,
+                "speaker": "SPEAKER_00",
+                "start": 14.877,
+                "word": "分"
+            },
+            {
+                "end": 15.779,
+                "score": 0.944,
+                "speaker": "SPEAKER_00",
+                "start": 15.078,
+                "word": "纸"
+            },
+            {
+                "end": 15.799,
+                "score": 0,
+                "speaker": "SPEAKER_00",
+                "start": 15.779,
+                "word": "贴"
+            },
+            {
+                "end": 15.819,
+                "score": 0.003,
+                "speaker": "SPEAKER_00",
+                "start": 15.799,
+                "word": "高"
+            },
+            {
+                "end": 16.02,
+                "score": 0.817,
+                "speaker": "SPEAKER_00",
+                "start": 15.819,
+                "word": "外"
+            },
+            {
+                "end": 16.421,
+                "score": 0.898,
+                "speaker": "SPEAKER_00",
+                "start": 16.02,
+                "word": "用"
+            },
+            {
+                "end": 16.441,
+                "score": 0.424,
+                "speaker": "SPEAKER_00",
+                "start": 16.421,
+                "word": "五"
+            },
+            {
+                "end": 16.722,
+                "score": 0.928,
+                "speaker": "SPEAKER_00",
+                "start": 16.441,
+                "word": "点"
+            },
+            {
+                "end": 16.882,
+                "score": 0.912,
+                "speaker": "SPEAKER_00",
+                "start": 16.722,
+                "word": "缓"
+            },
+            {
+                "end": 17.042,
+                "score": 0.905,
+                "speaker": "SPEAKER_00",
+                "start": 16.882,
+                "word": "解"
+            },
+            {
+                "end": 17.263,
+                "score": 0.834,
+                "speaker": "SPEAKER_00",
+                "start": 17.042,
+                "word": "不"
+            },
+            {
+                "end": 17.283,
+                "score": 0.097,
+                "speaker": "SPEAKER_00",
+                "start": 17.263,
+                "word": "理"
+            },
+            {
+                "end": 17.584,
+                "score": 0.999,
+                "speaker": "SPEAKER_00",
+                "start": 17.283,
+                "word": "想"
+            },
+            {
+                "end": 17.724,
+                "score": 0.972,
+                "speaker": "SPEAKER_00",
+                "start": 17.584,
+                "word": "可"
+            },
+            {
+                "end": 18.345,
+                "score": 0.875,
+                "speaker": "SPEAKER_00",
+                "start": 17.724,
+                "word": "以"
+            },
+            {
+                "end": 18.365,
+                "score": 0,
+                "speaker": "SPEAKER_00",
+                "start": 18.345,
+                "word": "去"
+            },
+            {
+                "end": 18.386,
+                "score": 0,
+                "speaker": "SPEAKER_00",
+                "start": 18.365,
+                "word": "疼"
+            },
+            {
+                "end": 18.406,
+                "score": 0.453,
+                "speaker": "SPEAKER_00",
+                "start": 18.386,
+                "word": "痛"
+            },
+            {
+                "end": 18.967,
+                "score": 0.969,
+                "speaker": "SPEAKER_00",
+                "start": 18.406,
+                "word": "科"
+            },
+            {
+                "end": 19.187,
+                "score": 0.911,
+                "speaker": "SPEAKER_00",
+                "start": 18.967,
+                "word": "做"
+            },
+            {
+                "end": 19.388,
+                "score": 0.91,
+                "speaker": "SPEAKER_00",
+                "start": 19.187,
+                "word": "冲"
+            },
+            {
+                "end": 19.548,
+                "score": 0.887,
+                "speaker": "SPEAKER_00",
+                "start": 19.388,
+                "word": "击"
+            },
+            {
+                "end": 19.729,
+                "score": 0.991,
+                "speaker": "SPEAKER_00",
+                "start": 19.548,
+                "word": "波"
+            },
+            {
+                "end": 19.829,
+                "score": 0.984,
+                "speaker": "SPEAKER_00",
+                "start": 19.729,
+                "word": "治"
+            },
+            {
+                "end": 20.21,
+                "score": 0.995,
+                "speaker": "SPEAKER_00",
+                "start": 19.829,
+                "word": "疗"
+            },
+            {
+                "end": 20.611,
+                "score": 0.899,
+                "speaker": "SPEAKER_00",
+                "start": 20.21,
+                "word": "或"
+            },
+            {
+                "end": 20.631,
+                "score": 0.047,
+                "speaker": "SPEAKER_00",
+                "start": 20.611,
+                "word": "抵"
+            },
+            {
+                "end": 20.831,
+                "score": 0.909,
+                "speaker": "SPEAKER_00",
+                "start": 20.631,
+                "word": "管"
+            },
+            {
+                "end": 20.972,
+                "score": 0.856,
+                "speaker": "SPEAKER_00",
+                "start": 20.831,
+                "word": "注"
+            },
+            {
+                "end": 21.192,
+                "score": 0.999,
+                "speaker": "SPEAKER_00",
+                "start": 20.972,
+                "word": "药"
+            },
+            {
+                "end": 21.292,
+                "score": 0.968,
+                "speaker": "SPEAKER_00",
+                "start": 21.192,
+                "word": "治"
+            },
+            {
+                "end": 22.535,
+                "score": 0.985,
+                "speaker": "SPEAKER_00",
+                "start": 21.292,
+                "word": "疗"
+            },
+            {
+                "end": 23.077,
+                "score": 0.849,
+                "speaker": "SPEAKER_01",
+                "start": 22.535,
+                "word": "请"
+            },
+            {
+                "end": 23.097,
+                "score": 0,
+                "speaker": "SPEAKER_01",
+                "start": 23.077,
+                "word": "问"
+            },
+            {
+                "end": 23.117,
+                "score": 0,
+                "speaker": "SPEAKER_01",
+                "start": 23.097,
+                "word": "一"
+            },
+            {
+                "end": 23.137,
+                "score": 0,
+                "speaker": "SPEAKER_01",
+                "start": 23.117,
+                "word": "下"
+            },
+            {
+                "end": 23.157,
+                "score": 0.241,
+                "speaker": "SPEAKER_01",
+                "start": 23.137,
+                "word": "严"
+            },
+            {
+                "end": 24.52,
+                "score": 0.908,
+                "speaker": "SPEAKER_01",
+                "start": 23.157,
+                "word": "重"
+            },
+            {
+                "end": 24.54,
+                "score": 0.01,
+                "speaker": "SPEAKER_01",
+                "start": 24.52,
+                "word": "吗"
+            },
+            {
+                "end": 24.66,
+                "score": 0.833,
+                "speaker": "SPEAKER_01",
+                "start": 24.54,
+                "word": "会"
+            },
+            {
+                "end": 24.68,
+                "score": 0.002,
+                "speaker": "SPEAKER_01",
+                "start": 24.66,
+                "word": "不"
+            },
+            {
+                "end": 24.7,
+                "score": 0,
+                "speaker": "SPEAKER_01",
+                "start": 24.68,
+                "word": "会"
+            },
+            {
+                "end": 24.72,
+                "score": 0,
+                "speaker": "SPEAKER_01",
+                "start": 24.7,
+                "word": "引"
+            },
+            {
+                "end": 24.741,
+                "score": 0,
+                "speaker": "SPEAKER_01",
+                "start": 24.72,
+                "word": "起"
+            },
+            {
+                "end": 24.761,
+                "score": 0,
+                "speaker": "SPEAKER_01",
+                "start": 24.741,
+                "word": "瘫"
+            },
+            {
+                "end": 24.781,
+                "score": 0,
+                "speaker": "SPEAKER_01",
+                "start": 24.761,
+                "word": "痪"
+            },
+            {
+                "end": 24.801,
+                "score": 0.018,
+                "speaker": "SPEAKER_01",
+                "start": 24.781,
+                "word": "等"
+            },
+            {
+                "end": 24.941,
+                "score": 0.876,
+                "speaker": "SPEAKER_01",
+                "start": 24.801,
+                "word": "严"
+            },
+            {
+                "end": 26.084,
+                "score": 0.916,
+                "speaker": "SPEAKER_01",
+                "start": 24.941,
+                "word": "重"
+            },
+            {
+                "end": 26.104,
+                "score": 0,
+                "speaker": "SPEAKER_01",
+                "start": 26.084,
+                "word": "问"
+            },
+            {
+                "end": 26.124,
+                "score": 0,
+                "speaker": "SPEAKER_01",
+                "start": 26.104,
+                "word": "题"
+            },
+            {
+                "end": 26.144,
+                "score": 0,
+                "speaker": "SPEAKER_01",
+                "start": 26.124,
+                "word": "会"
+            },
+            {
+                "end": 26.164,
+                "score": 0,
+                "speaker": "SPEAKER_01",
+                "start": 26.144,
+                "word": "不"
+            },
+            {
+                "end": 26.184,
+                "score": 0,
+                "speaker": "SPEAKER_01",
+                "start": 26.164,
+                "word": "会"
+            },
+            {
+                "end": 26.204,
+                "score": 0,
+                "speaker": "SPEAKER_01",
+                "start": 26.184,
+                "word": "一"
+            },
+            {
+                "end": 26.224,
+                "score": 0.018,
+                "speaker": "SPEAKER_01",
+                "start": 26.204,
+                "word": "直"
+            }
+        ]
+    }
+]

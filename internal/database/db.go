@@ -32,6 +32,9 @@ func InitDB() {
 		upload_time DATETIME,
 		size_kb INTEGER,
 		transcript TEXT,
+		dialogue TEXT,
+		medical_checks TEXT,
+		medical_record TEXT,
 		related_command TEXT
 	);
 	`
@@ -82,10 +85,10 @@ func GetAllAgentStatuses() ([]models.AgentStatus, error) {
 
 func InsertRecording(r models.Recording) error {
 	const stmt = `
-	INSERT INTO recordings (file_name, upload_time, size_kb, transcript, related_command) 
-	VALUES (?, ?, ?, ?, ?);
+	INSERT INTO recordings (file_name, upload_time, size_kb, transcript, dialogue, medical_checks, medical_record, related_command) 
+	VALUES (?, ?, ?, ?, ?, ?, ?, ?);
 	`
-	_, err := DB.Exec(stmt, r.FileName, r.UploadTime, r.SizeKB, r.Transcript, r.RelatedCommand)
+	_, err := DB.Exec(stmt, r.FileName, r.UploadTime, r.SizeKB, r.Transcript, r.Dialogue, r.MedicalChecks, r.MedicalRecord, r.RelatedCommand)
 	if err != nil {
 		return fmt.Errorf("failed to insert recording: %w", err)
 	}
@@ -94,7 +97,7 @@ func InsertRecording(r models.Recording) error {
 }
 
 func GetRecentRecordings(limit int) ([]models.Recording, error) {
-	rows, err := DB.Query("SELECT file_name, upload_time, size_kb, transcript, related_command FROM recordings ORDER BY upload_time DESC LIMIT ?", limit)
+	rows, err := DB.Query("SELECT id, file_name, upload_time, size_kb, transcript, dialogue, medical_checks, medical_record, related_command FROM recordings ORDER BY upload_time DESC LIMIT ?", limit)
 	if err != nil {
 		return nil, err
 	}
@@ -103,11 +106,48 @@ func GetRecentRecordings(limit int) ([]models.Recording, error) {
 	var recordings []models.Recording
 	for rows.Next() {
 		var r models.Recording
-		// Note: ID is auto-incremented, no need to read it here
-		if err := rows.Scan(&r.FileName, &r.UploadTime, &r.SizeKB, &r.Transcript, &r.RelatedCommand); err != nil {
+		if err := rows.Scan(&r.ID, &r.FileName, &r.UploadTime, &r.SizeKB, &r.Transcript, &r.Dialogue, &r.MedicalChecks, &r.MedicalRecord, &r.RelatedCommand); err != nil {
 			return nil, err
 		}
 		recordings = append(recordings, r)
 	}
 	return recordings, nil
+}
+
+// UpdateRecordingMedicalRecord 更新指定录音的病历记录
+func UpdateRecordingMedicalRecord(fileName string, medicalRecord string) error {
+	const stmt = `
+	UPDATE recordings 
+	SET medical_record = ?, related_command = ?
+	WHERE file_name = ?;
+	`
+
+	// 更新相关命令为包含Baichuan处理完成的信息
+	relatedCommand := "(ASR和Baichuan处理完成)"
+
+	_, err := DB.Exec(stmt, medicalRecord, relatedCommand, fileName)
+	if err != nil {
+		return fmt.Errorf("failed to update recording medical record: %w", err)
+	}
+
+	log.Printf("Successfully updated medical record for recording: %s", fileName)
+	return nil
+}
+
+func UpdateRecordingMedicalChecks(fileName string, medicalChecks string) error {
+	const stmt = `
+	UPDATE recordings 
+	SET medical_checks = ?, related_command = ?
+	WHERE file_name = ?;
+	`
+
+	relatedCommand := "(Medical Checks上传完成)"
+
+	_, err := DB.Exec(stmt, medicalChecks, relatedCommand, fileName)
+	if err != nil {
+		return fmt.Errorf("failed to update recording medical checks: %w", err)
+	}
+
+	log.Printf("Successfully updated medical checks for recording: %s", fileName)
+	return nil
 }

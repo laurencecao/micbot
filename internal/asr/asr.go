@@ -14,9 +14,12 @@ import (
 )
 
 type Response struct {
-	Filename string `json:"filename"`
-	Success  bool   `json:"success"`
-	Text     string `json:"text"`
+	Filename     string `json:"filename,omitempty"`
+	Success      bool   `json:"success,omitempty"`
+	Text         string `json:"text,omitempty"`
+	RawSegments  string `json:"raw_segments,omitempty"`
+	Transcript   string `json:"transcript,omitempty"`
+	DetectedLang string `json:"detected_language,omitempty"`
 }
 
 func parseResult(jsonStr string) (Response, error) {
@@ -26,6 +29,7 @@ func parseResult(jsonStr string) (Response, error) {
 		fmt.Printf("解析JSON失败: %v\n", err)
 		return resp, err
 	}
+	resp.Success = true
 	return resp, nil
 }
 
@@ -103,6 +107,80 @@ func ensure_wave(audioData []byte) ([]byte, error) {
 	}
 
 	return wavData, nil
+}
+
+// ASRFormatResponse 新ASR服务返回的响应格式
+type ASRFormatResponse struct {
+	DetectedLanguage string        `json:"detected_language"`
+	Transcript       string        `json:"transcript"`
+	RawSegments      []interface{} `json:"raw_segments"`
+}
+
+// TranscribeWithSpeaker 使用新的ASR服务发送音频数据，返回包含说话者识别和原始分段的响应
+func TranscribeWithSpeaker(audioData []byte) (ASRFormatResponse, error) {
+	// 首先确保音频是 WAV 格式
+	wavData, err := ensure_wave(audioData)
+	if err != nil {
+		return ASRFormatResponse{}, fmt.Errorf("音频格式转换失败: %v", err)
+	}
+
+	// 创建 multipart form
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+
+	// 创建表单文件部分
+	part, err := writer.CreateFormFile("file", "audio.wav")
+	if err != nil {
+		return ASRFormatResponse{}, fmt.Errorf("创建表单文件失败: %v", err)
+	}
+
+	// 写入音频数据
+	if _, err := io.Copy(part, bytes.NewReader(wavData)); err != nil {
+		return ASRFormatResponse{}, fmt.Errorf("写入音频数据失败: %v", err)
+	}
+
+	// 关闭 writer 以写入结束边界
+	if err := writer.Close(); err != nil {
+		return ASRFormatResponse{}, fmt.Errorf("关闭表单写入器失败: %v", err)
+	}
+
+	// 创建 HTTP 请求 - 使用新的ASR服务地址
+	asrFormatURL := "http://localhost:8800/transcribe"
+	req, err := http.NewRequest("POST", asrFormatURL, body)
+	if err != nil {
+		return ASRFormatResponse{}, fmt.Errorf("创建请求失败: %v", err)
+	}
+
+	// 设置 Content-Type 头部
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+
+	// 发送请求
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return ASRFormatResponse{}, fmt.Errorf("发送请求失败: %v", err)
+	}
+	defer resp.Body.Close()
+
+	// 检查响应状态
+	if resp.StatusCode != http.StatusOK {
+		return ASRFormatResponse{}, fmt.Errorf("服务返回错误状态: %s", resp.Status)
+	}
+
+	// 读取响应内容
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return ASRFormatResponse{}, fmt.Errorf("读取响应失败: %v", err)
+	}
+
+	// 解析新格式的响应
+	var asrResp ASRFormatResponse
+	err = json.Unmarshal(respBody, &asrResp)
+	if err != nil {
+		return ASRFormatResponse{}, fmt.Errorf("解析新ASR响应失败: %v, 响应内容: %s", err, string(respBody))
+	}
+
+	return asrResp, nil
 }
 
 // transcribe 提交音频数据到转录服务

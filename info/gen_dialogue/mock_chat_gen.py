@@ -4,13 +4,14 @@ import os
 import shutil
 import subprocess
 import glob
+import sys
 
 # 配置项
 API_URL = "http://localhost:8080/v1/tts"
-INPUT_FILE = "input.txt"
+INPUT_FILE = sys.argv[1] #"input.txt"
 OUTPUT_DIR = "outputs"
-FINAL_OUTPUT = "final_output.wav"
-FINAL_MP3 = "final_output.mp3"  # Add this
+FINAL_OUTPUT = f'{sys.argv[1]}.wav' #"final_output.wav"
+FINAL_MP3 = f'{sys.argv[1]}.mp3' #"final_output.mp3"  # Add this
 
 SPEAKERS = {
     "Speaker 0": {
@@ -22,6 +23,9 @@ SPEAKERS = {
         "ref_text": "周一到周五，每天早晨七点半到九点半的直播片段。言下之意呢，就是废话有点多，大家也别嫌弃，因为这都是直播间最真实的状态了。"
     }
 }
+
+SPEAKERS.update({k.upper(): v for k, v in SPEAKERS.items()})
+SPEAKERS.update({k.lower(): v for k, v in SPEAKERS.items()})
 
 def clean_and_prepare_dir():
     if os.path.exists(OUTPUT_DIR):
