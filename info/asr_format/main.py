@@ -14,7 +14,7 @@ app = FastAPI()
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 COMPUTE_TYPE = "float16" if DEVICE == "cuda" else "int8"
 BATCH_SIZE = 16
-HF_TOKEN = ""
+HF_TOKEN = os.environ['HF_TOKEN']
 
 # Global Models
 print(f"Loading models on {DEVICE}...")
@@ -116,3 +116,4 @@ async def transcribe_audio(
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8800)
+
