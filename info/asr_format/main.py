@@ -3,10 +3,12 @@ import torch
 import whisperx
 import gc
 from fastapi import FastAPI, UploadFile, File, HTTPException, Form
-from whisperx.diarize import DiarizationPipeline
+# from whisperx.diarize import DiarizationPipeline
 import shutil
 import tempfile
 from typing import Optional
+import requests
+import json
 
 app = FastAPI()
 
@@ -14,12 +16,44 @@ app = FastAPI()
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 COMPUTE_TYPE = "float16" if DEVICE == "cuda" else "int8"
 BATCH_SIZE = 16
-HF_TOKEN = os.environ['HF_TOKEN']
+HF_TOKEN = os.environ.get('HF_TOKEN')
+TOKEN_302 = os.environ.get('TOKEN_302')
 
 # Global Models
 print(f"Loading models on {DEVICE}...")
-MODEL = whisperx.load_model("large-v3-turbo", DEVICE, compute_type=COMPUTE_TYPE)
-DIARIZE_MODEL = DiarizationPipeline(use_auth_token=HF_TOKEN, device=DEVICE)
+# MODEL = whisperx.load_model("large-v3-turbo", DEVICE, compute_type=COMPUTE_TYPE)
+# DIARIZE_MODEL = DiarizationPipeline(use_auth_token=HF_TOKEN, device=DEVICE)
+MODEL = None
+DIARIZE_MODEL = None
+
+
+def using_online_api(tmp_path, language=None):   
+    url = "https://api.302ai.cn/302/whisperx"
+    
+    # Configuration based on screenshot
+    payload = {
+        "processing_type": "diarize", # Essential for speaker labels
+        "translate": "false",
+        "output": "json"              # Must be json to support segment parsing
+    }
+    
+    # Add language only if specified
+    if language:
+        payload["language"] = language
+    # File upload
+    files = [
+        ('audio_input', (os.path.basename(tmp_path), open(tmp_path, 'rb'), 'application/octet-stream'))
+    ]
+    
+    headers = {
+        'Authorization': f'Bearer {TOKEN_302}'
+    }
+    
+    # Use standard POST request
+    response = requests.post(url, headers=headers, data=payload, files=files)
+    
+    # Return the parsed dictionary directly
+    return response.json()
 
 def format_speech_by_speaker(segments):
     formatted_lines = []
@@ -55,7 +89,42 @@ def format_speech_by_speaker(segments):
     return formatted_lines
 
 @app.post("/transcribe")
-async def transcribe_audio(
+async def transcribe_audio(file: UploadFile = File(...)):
+    # 1. Prepare temp file
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp:
+        shutil.copyfileobj(file.file, tmp)
+        tmp_path = tmp.name
+    try:
+        # 2. Get result from Online API
+        # response.json() in the helper function already returns a Dict
+        result = using_online_api(tmp_path)
+        
+        # REMOVED: inner_json_str = json.loads(api_response_raw) 
+        # REMOVED: result = json.loads(inner_json_str)
+        # 4. Extract Segments and Language
+        segments = result.get("segments", [])
+        language = result.get("language", "en") # Default to en if missing
+        
+        # 5. Format Output
+        formatted_list = format_speech_by_speaker(segments)
+        
+        # 6. Return consistent structure
+        return {
+            "detected_language": language,
+            "transcript": "\n".join(formatted_list),
+            "raw_segments": segments
+        }
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        # Cleanup
+        if os.path.exists(tmp_path):
+            os.remove(tmp_path)
+
+@app.post("/transcribe2")
+async def transcribe_audio2(
     file: UploadFile = File(...),
     language: Optional[str] = Form(None) # Allow manual language override
 ):
