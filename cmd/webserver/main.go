@@ -9,6 +9,8 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/exec"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
@@ -637,6 +639,209 @@ func commandHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Command %s processed. Agent response: %s", cmd, string(resp.Data))
 }
 
+var mobileTmpl *template.Template
+
+func initMobile() {
+	mobileTmpl = template.Must(template.ParseFiles("web/mobile.html"))
+}
+
+func mobileHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	if err := mobileTmpl.Execute(w, nil); err != nil {
+		http.Error(w, "Failed to render template", http.StatusInternalServerError)
+	}
+}
+
+func withMobileCORS(handler http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		handler(w, r)
+	}
+}
+
+func mobileRecordsHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	records, err := database.GetMobileRecords()
+	if err != nil {
+		log.Printf("Query error: %v\n", err)
+		http.Error(w, "Database query failed", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(records); err != nil {
+		log.Printf("JSON encode error: %v\n", err)
+	}
+}
+
+func mobileUploadHandler(w http.ResponseWriter, r *http.Request) {
+	log.Printf("[MOBILE UPLOAD] Starting upload handler\n")
+
+	if r.Method != http.MethodPost {
+		log.Printf("[MOBILE UPLOAD] Method not allowed: %s\n", r.Method)
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	err := r.ParseMultipartForm(32 << 20)
+	if err != nil {
+		log.Printf("[MOBILE UPLOAD] Failed to parse form: %v\n", err)
+		http.Error(w, "Failed to parse form: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+	defer r.MultipartForm.RemoveAll()
+
+	file, handler, err := r.FormFile("audio")
+	if err != nil {
+		log.Printf("[MOBILE UPLOAD] Failed to get file: %v\n", err)
+		http.Error(w, "Failed to get file: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	log.Printf("[MOBILE UPLOAD] Received file: %s, size: %d bytes\n", handler.Filename, handler.Size)
+
+	timestamp := time.Now().Format("20060102_150405")
+	originalFilename := fmt.Sprintf("temp_%s_%s", timestamp, handler.Filename)
+	originalPath := filepath.Join(config.RecorderBasedir, originalFilename)
+
+	log.Printf("[MOBILE UPLOAD] Target directory: %s\n", config.RecorderBasedir)
+
+	if err := os.MkdirAll(config.RecorderBasedir, 0755); err != nil {
+		file.Close()
+		log.Printf("[MOBILE UPLOAD] Failed to create directory: %v\n", err)
+		http.Error(w, "Failed to create directory: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	dst, err := os.Create(originalPath)
+	if err != nil {
+		file.Close()
+		log.Printf("[MOBILE UPLOAD] Failed to create file: %v\n", err)
+		http.Error(w, "Failed to create file: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	written, err := io.Copy(dst, file)
+	file.Close()
+	dst.Close()
+
+	if err != nil {
+		os.Remove(originalPath)
+		log.Printf("[MOBILE UPLOAD] Failed to save file: %v\n", err)
+		http.Error(w, "Failed to save file: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	log.Printf("[MOBILE UPLOAD] File saved successfully: %s (%d bytes)\n", originalPath, written)
+
+	mp3Filename := fmt.Sprintf("mobile_recording_%s.mp3", timestamp)
+	mp3Path := filepath.Join(config.RecorderBasedir, mp3Filename)
+
+	if err := convertToMP3(originalPath, mp3Path); err != nil {
+		log.Printf("[MOBILE UPLOAD] MP3 conversion failed: %v, keeping original format\n", err)
+		mp3Filename = originalFilename
+		mp3Path = originalPath
+	} else {
+		log.Printf("[MOBILE UPLOAD] MP3 conversion successful: %s\n", mp3Path)
+		os.Remove(originalPath)
+	}
+
+	log.Printf("[MOBILE UPLOAD] Inserting into database: %s\n", mp3Filename)
+	id, err := database.InsertMobileRecording(mp3Filename)
+	if err != nil {
+		os.Remove(mp3Path)
+		log.Printf("[MOBILE UPLOAD] Failed to insert record: %v\n", err)
+		http.Error(w, "Failed to insert record: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	log.Printf("[MOBILE UPLOAD] Success: id=%d, file=%s\n", id, mp3Filename)
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"success": true,
+		"id":      id,
+		"message": "Upload successful",
+	})
+}
+
+func convertToMP3(inputPath, outputPath string) error {
+	_, err := exec.LookPath("ffmpeg")
+	if err != nil {
+		return fmt.Errorf("ffmpeg not found in PATH")
+	}
+
+	cmd := exec.Command("ffmpeg", "-i", inputPath, "-vn", "-ar", "44100", "-ac", "2", "-b:a", "192k", "-y", outputPath)
+
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("ffmpeg conversion failed: %v, output: %s", err, string(output))
+	}
+
+	if _, err := os.Stat(outputPath); os.IsNotExist(err) {
+		return fmt.Errorf("output file not created")
+	}
+
+	return nil
+}
+
+func mobileUpdateDiagnosisHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req struct {
+		ID      int    `json:"id"`
+		Content string `json:"content"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid JSON: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if err := database.UpdateMobileDiagnosis(req.ID, req.Content); err != nil {
+		http.Error(w, "Failed to update: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"success": true,
+		"message": "Diagnosis record updated",
+	})
+}
+
+func mobileAudioHandler(w http.ResponseWriter, r *http.Request) {
+	filename := r.URL.Path[len("/mobile/audio/"):]
+	if filename == "" {
+		http.Error(w, "Invalid path", http.StatusBadRequest)
+		return
+	}
+
+	if strings.Contains(filename, "..") || strings.Contains(filename, "/") || strings.Contains(filename, "\\") {
+		http.Error(w, "Invalid filename", http.StatusBadRequest)
+		return
+	}
+
+	audioPath := filepath.Join(config.RecorderBasedir, filename)
+
+	http.ServeFile(w, r, audioPath)
+}
+
 func main() {
 	config.LoadConfigForMe()
 
@@ -645,22 +850,37 @@ func main() {
 	}
 
 	initServer()
+	initMobile()
 	defer natsConn.Close()
 
-	// 启动监听器 (现在函数定义已经存在)
 	subscribeAgentStatus()
 	subscribeUploadRecord()
 
-	// 配置 HTTP 路由
 	http.HandleFunc("/", homeHandler)
 	http.HandleFunc("/api/command", commandHandler)
 	http.HandleFunc("/api/status", apiStatusHandler)
 	http.HandleFunc("/api/history", apiHistoryHandler)
 	http.HandleFunc("/api/upload_medical_checks", uploadMedicalChecksHandler)
 
+	http.HandleFunc("/mobile", mobileHandler)
+	http.HandleFunc("/api/mobile/records", withMobileCORS(mobileRecordsHandler))
+	http.HandleFunc("/api/mobile/records/upload", withMobileCORS(mobileUploadHandler))
+	http.HandleFunc("/api/mobile/records/update-diagnosis", withMobileCORS(mobileUpdateDiagnosisHandler))
+	http.HandleFunc("/mobile/audio/", withMobileCORS(mobileAudioHandler))
+
+	http.Handle("/static/", withLoggingStatic(http.StripPrefix("/static/", http.FileServer(http.Dir("./web/static")))))
+
 	port := ":8080"
 	log.Printf("Web Server running on http://localhost%s", port)
 	if err := http.ListenAndServe(port, nil); err != nil {
 		log.Fatal(err)
 	}
+}
+
+func withLoggingStatic(handler http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+		handler.ServeHTTP(w, r)
+		log.Printf("[STATIC] %s %s - %v\n", r.URL.Path, r.RemoteAddr, time.Since(start))
+	})
 }

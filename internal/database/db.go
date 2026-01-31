@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"time"
 
 	"medishare.io/micbot/internal/config"
 	"medishare.io/micbot/internal/models"
@@ -136,7 +137,7 @@ func UpdateRecordingMedicalRecord(fileName string, medicalRecord string) error {
 
 func UpdateRecordingMedicalChecks(fileName string, medicalChecks string) error {
 	const stmt = `
-	UPDATE recordings 
+	UPDATE recordings
 	SET medical_checks = ?, related_command = ?
 	WHERE file_name = ?;
 	`
@@ -149,5 +150,63 @@ func UpdateRecordingMedicalChecks(fileName string, medicalChecks string) error {
 	}
 
 	log.Printf("Successfully updated medical checks for recording: %s", fileName)
+	return nil
+}
+
+type MobileRecord struct {
+	ID              int       `json:"id"`
+	DiagnosisRecord string    `json:"diagnosis_record"`
+	AudioFile       string    `json:"audio_file"`
+	AudioText       string    `json:"audio_text"`
+	HISRecord       string    `json:"his_record"`
+	CreatedAt       time.Time `json:"created_at"`
+}
+
+func GetMobileRecords() ([]MobileRecord, error) {
+	rows, err := DB.Query("SELECT id, medical_checks, file_name, transcript, medical_record, upload_time FROM recordings ORDER BY id DESC")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var records []MobileRecord
+	for rows.Next() {
+		var rec MobileRecord
+		err := rows.Scan(&rec.ID, &rec.DiagnosisRecord, &rec.AudioFile, &rec.AudioText, &rec.HISRecord, &rec.CreatedAt)
+		if err != nil {
+			log.Printf("Row scan error: %v\n", err)
+			continue
+		}
+		records = append(records, rec)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return records, nil
+}
+
+func InsertMobileRecording(fileName string) (int64, error) {
+	result, err := DB.Exec(
+		"INSERT INTO recordings (file_name, upload_time, size_kb, transcript, dialogue, medical_checks, medical_record, related_command) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+		fileName, time.Now(), 0, "", "", "", "", "(Mobile上传)",
+	)
+	if err != nil {
+		return 0, fmt.Errorf("failed to insert mobile recording: %w", err)
+	}
+
+	id, _ := result.LastInsertId()
+	log.Printf("Successfully inserted mobile recording: id=%d, file=%s", id, fileName)
+	return id, nil
+}
+
+func UpdateMobileDiagnosis(id int, content string) error {
+	_, err := DB.Exec("UPDATE recordings SET medical_checks = ? WHERE id = ?", content, id)
+	if err != nil {
+		return fmt.Errorf("failed to update mobile diagnosis: %w", err)
+	}
+
+	log.Printf("Successfully updated mobile diagnosis for record: %d", id)
 	return nil
 }
