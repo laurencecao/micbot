@@ -15,6 +15,7 @@ from urllib import request
 from urllib.parse import urlparse
 import dashscope
 import oss2
+import time
 
 app = FastAPI()
 
@@ -249,12 +250,32 @@ async def transcribe_audio_funasr(file: UploadFile = File(...)):
     try:
         oss_url = upload_to_oss(tmp_path)
 
-        task_response = Transcription.async_call(
-            model='fun-asr',
-            file_urls=[oss_url],
-            diarization_enabled=True,
-            language_hints=['zh', 'en']
-        )
+        # 添加重试机制，因为 Transcription.async_call 偶尔会因网络问题失败
+        max_retries = 3
+        retry_delay = 2  # 秒
+        task_response = None
+        last_error = None
+
+        for attempt in range(max_retries):
+            try:
+                task_response = Transcription.async_call(
+                    model='fun-asr',
+                    file_urls=[oss_url],
+                    diarization_enabled=True,
+                    language_hints=['zh', 'en']
+                )
+                break  # 成功则跳出循环
+            except Exception as e:
+                last_error = e
+                print(f"Transcription.async_call attempt {attempt + 1}/{max_retries} failed: {e}")
+                if attempt < max_retries - 1:
+                    print(f"Retrying in {retry_delay} seconds...")
+                    time.sleep(retry_delay)
+                else:
+                    print("All retries exhausted.")
+
+        if task_response is None:
+            raise last_error if last_error else Exception("Failed to call Transcription.async_call")
 
         transcription_response = Transcription.wait(task=task_response.output.task_id)
 
