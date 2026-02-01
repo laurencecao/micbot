@@ -31,6 +31,10 @@ var (
 	Channels        = 1
 	BitRate         = "192k"
 
+	CertFile  = "./certs/cert.pem"
+	KeyFile   = "./certs/key.pem"
+	EnableSSL = false
+
 	configLoaded = false
 )
 
@@ -125,6 +129,17 @@ func LoadFromINI(configPath string) error {
 			BitRate = key.String()
 		}
 	}
+	if section, err := cfg.GetSection("webserver"); err == nil {
+		if key, err := section.GetKey("cert_file"); err == nil {
+			CertFile = key.String()
+		}
+		if key, err := section.GetKey("key_file"); err == nil {
+			KeyFile = key.String()
+		}
+		if key, err := section.GetKey("enable_ssl"); err == nil {
+			EnableSSL = key.MustBool(false)
+		}
+	}
 	configLoaded = true
 	return nil
 }
@@ -167,7 +182,10 @@ func createDefaultConfig(configPath string) error {
 	recorderSection.NewKey("sample_rate", strconv.Itoa(SampleRate))
 	recorderSection.NewKey("channels", strconv.Itoa(Channels))
 	recorderSection.NewKey("bit_rate", BitRate)
-	// 写入文件
+	webserverSection, _ := cfg.NewSection("webserver")
+	webserverSection.NewKey("cert_file", CertFile)
+	webserverSection.NewKey("key_file", KeyFile)
+	webserverSection.NewKey("enable_ssl", strconv.FormatBool(EnableSSL))
 	if err := cfg.SaveTo(configPath); err != nil {
 		return fmt.Errorf("failed to save default config: %v", err)
 	}

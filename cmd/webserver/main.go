@@ -871,6 +871,26 @@ func main() {
 	http.Handle("/static/", withLoggingStatic(http.StripPrefix("/static/", http.FileServer(http.Dir("./web/static")))))
 
 	port := ":8080"
+	certFile := config.CertFile
+	keyFile := config.KeyFile
+
+	if config.EnableSSL {
+		if certFile != "" && keyFile != "" {
+			if _, err := os.Stat(certFile); err == nil {
+				if _, err := os.Stat(keyFile); err == nil {
+					log.Printf("Web Server running on https://localhost%s", port)
+					if err := http.ListenAndServeTLS(port, certFile, keyFile, nil); err != nil {
+						log.Fatal(err)
+					}
+					return
+				}
+			}
+			log.Printf("警告: enable_ssl=true 但证书文件不存在，回退到 HTTP")
+		} else {
+			log.Printf("警告: enable_ssl=true 但证书路径未配置，回退到 HTTP")
+		}
+	}
+
 	log.Printf("Web Server running on http://localhost%s", port)
 	if err := http.ListenAndServe(port, nil); err != nil {
 		log.Fatal(err)
