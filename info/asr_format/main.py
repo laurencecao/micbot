@@ -239,14 +239,32 @@ def upload_to_oss(local_file_path, object_name=None):
 
 
 def format_funasr_transcript(sentences):
+    if not sentences:
+        return []
     formatted_lines = []
+    current_speaker = None
+    current_texts = []
     for sentence in sentences:
         speaker_id = sentence.get('speaker_id', 0)
         text = sentence.get('text', '').strip()
-        if text:
-            formatted_lines.append(f"speaker {speaker_id:02d}:{text}")
+        
+        if not text:
+            continue
+        # 如果说话人没变，则合并文本
+        if speaker_id == current_speaker:
+            current_texts.append(text)
+        else:
+            # 说话人变了，保存上一个人的内容（如果存在）
+            if current_texts:
+                formatted_lines.append(f"speaker {current_speaker:02d}:{' '.join(current_texts)}")
+            
+            # 重置状态
+            current_speaker = speaker_id
+            current_texts = [text]
+    # 处理最后一段
+    if current_texts:
+        formatted_lines.append(f"speaker {current_speaker:02d}:{' '.join(current_texts)}")
     return formatted_lines
-
 
 @app.post("/transcribe")
 async def transcribe_audio_funasr(file: UploadFile = File(...)):
