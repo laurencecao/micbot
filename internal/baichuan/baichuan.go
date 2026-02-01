@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+
+	"medishare.io/micbot/internal/config"
 )
 
 // GenerateSOAPRequest Baichuan API请求结构
@@ -34,9 +36,7 @@ func GenerateMedicalRecord(dialogue string, history string) (string, error) {
 		return "", fmt.Errorf("编码请求数据失败: %v", err)
 	}
 
-	// 创建HTTP请求
-	baichuanURL := "http://localhost:8000/generate_soap"
-	req, err := http.NewRequest("POST", baichuanURL, bytes.NewBuffer(jsonData))
+	req, err := http.NewRequest("POST", config.StructApiURL, bytes.NewBuffer(jsonData))
 	if err != nil {
 		return "", fmt.Errorf("创建请求失败: %v", err)
 	}

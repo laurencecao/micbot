@@ -9,6 +9,12 @@ import tempfile
 from typing import Optional
 import requests
 import json
+from http import HTTPStatus
+from dashscope.audio.asr import Transcription
+from urllib import request
+from urllib.parse import urlparse
+import dashscope
+import oss2
 
 app = FastAPI()
 
@@ -18,7 +24,20 @@ COMPUTE_TYPE = "float16" if DEVICE == "cuda" else "int8"
 BATCH_SIZE = 16
 HF_TOKEN = os.environ.get('HF_TOKEN')
 TOKEN_302 = os.environ.get('TOKEN_302')
+API_302_URL = os.environ.get('API_302_URL')
 
+dashscope.base_http_api_url = 'https://dashscope.aliyuncs.com/api/v1'
+dashscope.api_key = os.environ.get("DASHSCOPE_API_KEY")
+
+OSS_ACCESS_KEY_ID = os.environ.get('OSS_ACCESS_KEY_ID')
+OSS_ACCESS_KEY_SECRET = os.environ.get('OSS_ACCESS_KEY_SECRET')
+OSS_ENDPOINT = os.environ.get('OSS_ENDPOINT', 'https://oss-cn-shanghai.aliyuncs.com')
+OSS_BUCKET_NAME = os.environ.get('OSS_BUCKET_NAME')
+
+print(f"using OSS_ACCESS_KEY_ID:{OSS_ACCESS_KEY_ID}")
+print(f"using OSS_ACCESS_KEY_SECRET:{OSS_ACCESS_KEY_SECRET}")
+print(f"using OSS_ENDPOINT:{OSS_ENDPOINT}")
+print(f"using OSS_BUCKET_NAME:{OSS_BUCKET_NAME}")
 # Global Models
 print(f"Loading models on {DEVICE}...")
 # MODEL = whisperx.load_model("large-v3-turbo", DEVICE, compute_type=COMPUTE_TYPE)
@@ -28,7 +47,8 @@ DIARIZE_MODEL = None
 
 
 def using_online_api(tmp_path, language=None):   
-    url = "https://api.302ai.cn/302/whisperx"
+    # url = "https://api.302ai.cn/302/whisperx"
+    url = API_302_URL
     
     # Configuration based on screenshot
     payload = {
@@ -53,7 +73,12 @@ def using_online_api(tmp_path, language=None):
     response = requests.post(url, headers=headers, data=payload, files=files)
     
     # Return the parsed dictionary directly
-    return response.json()
+    ret = response.json()
+
+    with open('/tmp/resp_302ai.json', 'w') as wfl:
+        wfl.write(json.dumps(ret))
+
+    return ret
 
 def format_speech_by_speaker(segments):
     formatted_lines = []
@@ -88,7 +113,7 @@ def format_speech_by_speaker(segments):
     
     return formatted_lines
 
-@app.post("/transcribe")
+@app.post("/transcribe3")
 async def transcribe_audio(file: UploadFile = File(...)):
     # 1. Prepare temp file
     with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp:
@@ -98,22 +123,26 @@ async def transcribe_audio(file: UploadFile = File(...)):
         # 2. Get result from Online API
         # response.json() in the helper function already returns a Dict
         result = using_online_api(tmp_path)
+        #print("......", result, "......")
         
         # REMOVED: inner_json_str = json.loads(api_response_raw) 
         # REMOVED: result = json.loads(inner_json_str)
         # 4. Extract Segments and Language
         segments = result.get("segments", [])
-        language = result.get("language", "en") # Default to en if missing
+        language = result.get("language", "zh") # Default to en if missing
         
         # 5. Format Output
         formatted_list = format_speech_by_speaker(segments)
         
         # 6. Return consistent structure
-        return {
+        ret = {
             "detected_language": language,
             "transcript": "\n".join(formatted_list),
             "raw_segments": segments
         }
+        with open('/tmp/dbg.json', 'w') as wfl:
+            wfl.write(json.dumps(ret))
+        return ret
     except Exception as e:
         import traceback
         traceback.print_exc()
@@ -182,7 +211,104 @@ async def transcribe_audio2(
         if os.path.exists(tmp_path):
             os.remove(tmp_path)
 
+
+def upload_to_oss(local_file_path, object_name=None):
+    auth = oss2.Auth(OSS_ACCESS_KEY_ID, OSS_ACCESS_KEY_SECRET)
+    bucket = oss2.Bucket(auth, OSS_ENDPOINT, OSS_BUCKET_NAME)
+
+    if object_name is None:
+        import uuid
+        ext = os.path.splitext(local_file_path)[1]
+        object_name = f"asr/{uuid.uuid4()}{ext}"
+
+    print(f"upload {local_file_path} to oss {object_name}")
+    bucket.put_object_from_file(object_name, local_file_path)
+
+    https_url = bucket.sign_url('GET', object_name, expires=10)
+    print(f"save to oss: {https_url}")
+    return https_url
+
+
+def format_funasr_transcript(sentences):
+    formatted_lines = []
+    for sentence in sentences:
+        speaker_id = sentence.get('speaker_id', 0)
+        text = sentence.get('text', '').strip()
+        if text:
+            formatted_lines.append(f"speaker {speaker_id:02d}:{text}")
+    return formatted_lines
+
+
+@app.post("/transcribe")
+async def transcribe_audio_funasr(file: UploadFile = File(...)):
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp:
+        shutil.copyfileobj(file.file, tmp)
+        tmp_path = tmp.name
+
+    oss_url = None
+    try:
+        oss_url = upload_to_oss(tmp_path)
+
+        task_response = Transcription.async_call(
+            model='fun-asr',
+            file_urls=[oss_url],
+            diarization_enabled=True,
+            language_hints=['zh', 'en']
+        )
+
+        transcription_response = Transcription.wait(task=task_response.output.task_id)
+
+        if transcription_response.status_code != HTTPStatus.OK:
+            raise HTTPException(
+                status_code=500,
+                detail=f"FunASR API error: {transcription_response.output.message}"
+            )
+
+        all_sentences = []
+        detected_language = "zh"
+
+        for transcription in transcription_response.output['results']:
+            if transcription['subtask_status'] == 'SUCCEEDED':
+                url = transcription['transcription_url']
+                result = json.loads(request.urlopen(url).read().decode('utf8'))
+
+                for transcript_data in result.get('transcripts', []):
+                    sentences = transcript_data.get('sentences', [])
+                    all_sentences.extend(sentences)
+            else:
+                print(f"Transcription failed: {transcription}")
+
+        formatted_list = format_funasr_transcript(all_sentences)
+
+        ret = {
+            "detected_language": detected_language,
+            "transcript": "\n".join(formatted_list),
+            "raw_segments": all_sentences
+        }
+        with open('/tmp/result.json', 'w') as wfl:
+            wfl.write(json.dumps(ret))
+        return ret
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if os.path.exists(tmp_path):
+            os.remove(tmp_path)
+        if oss_url:
+            try:
+                auth = oss2.Auth(OSS_ACCESS_KEY_ID, OSS_ACCESS_KEY_SECRET)
+                bucket = oss2.Bucket(auth, OSS_ENDPOINT, OSS_BUCKET_NAME)
+                parsed = urlparse(oss_url)
+                object_name = parsed.path.lstrip('/')
+                bucket.delete_object(object_name)
+            except Exception as e:
+                print(f"Failed to delete OSS object: {e}")
+
+
 if __name__ == "__main__":
     import uvicorn
+    print(f"using BACKEND: {API_302_URL}")
     uvicorn.run(app, host="0.0.0.0", port=8800)
 

@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"strings"
 
 	"medishare.io/micbot/internal/config"
 )
@@ -109,11 +110,52 @@ func ensure_wave(audioData []byte) ([]byte, error) {
 	return wavData, nil
 }
 
-// ASRFormatResponse 新ASR服务返回的响应格式
+// ASRWord 单个词的信息
+type ASRWord struct {
+	Word    string  `json:"word"`
+	Start   float64 `json:"start"`
+	End     float64 `json:"end"`
+	Score   float64 `json:"score"`
+	Speaker string  `json:"speaker"`
+}
+
+// ASRSegment 单个说话者分段
+type ASRSegment struct {
+	Start   float64   `json:"start"`
+	End     float64   `json:"end"`
+	Speaker string    `json:"speaker"`
+	Text    string    `json:"text"`
+	Words   []ASRWord `json:"words"`
+}
+
+// ASRFormatResponse 匹配 /transcribe API 的返回格式
+// 包含：detected_language, transcript, raw_segments
 type ASRFormatResponse struct {
-	DetectedLanguage string        `json:"detected_language"`
-	Transcript       string        `json:"transcript"`
-	RawSegments      []interface{} `json:"raw_segments"`
+	DetectedLanguage string       `json:"detected_language"`
+	Transcript       string       `json:"transcript"`
+	RawSegments      []ASRSegment `json:"raw_segments"`
+}
+
+func (r ASRFormatResponse) ToMarkdown() string {
+	if r.Transcript == "" {
+		return ""
+	}
+
+	lines := strings.Split(r.Transcript, "\n")
+	var result strings.Builder
+	for i, line := range lines {
+		if i > 0 {
+			result.WriteString("\n\n")
+		}
+		if idx := strings.Index(line, ":"); idx > 0 {
+			speaker := line[:idx]
+			text := line[idx+1:]
+			result.WriteString(fmt.Sprintf("**%s**: %s", speaker, text))
+		} else {
+			result.WriteString(line)
+		}
+	}
+	return result.String()
 }
 
 // TranscribeWithSpeaker 使用新的ASR服务发送音频数据，返回包含说话者识别和原始分段的响应
@@ -144,9 +186,7 @@ func TranscribeWithSpeaker(audioData []byte) (ASRFormatResponse, error) {
 		return ASRFormatResponse{}, fmt.Errorf("关闭表单写入器失败: %v", err)
 	}
 
-	// 创建 HTTP 请求 - 使用新的ASR服务地址
-	asrFormatURL := "http://localhost:8800/transcribe"
-	req, err := http.NewRequest("POST", asrFormatURL, body)
+	req, err := http.NewRequest("POST", config.ASRApiURL, body)
 	if err != nil {
 		return ASRFormatResponse{}, fmt.Errorf("创建请求失败: %v", err)
 	}
