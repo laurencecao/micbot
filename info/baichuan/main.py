@@ -188,7 +188,8 @@ async def generate_medical_record_api(req: MedicalRecordRequest):
             messages=[
                 {"role": "system", "content": "你是一位专业的临床医生，必须直接返回JSON格式，不要添加任何markdown标记或其他文本"},
                 {"role": "user", "content": full_prompt}
-            ]
+            ],
+            temperature=0.01,
         )
         result = chat_res.choices[0].message.content
         print("invoke baichuan done!")
