@@ -16,6 +16,7 @@ from urllib.parse import urlparse
 import dashscope
 import oss2
 import time
+import uuid
 
 app = FastAPI()
 
@@ -216,15 +217,22 @@ async def transcribe_audio2(
 def upload_to_oss(local_file_path, object_name=None):
     auth = oss2.Auth(OSS_ACCESS_KEY_ID, OSS_ACCESS_KEY_SECRET)
     bucket = oss2.Bucket(auth, OSS_ENDPOINT, OSS_BUCKET_NAME)
-
     if object_name is None:
-        import uuid
         ext = os.path.splitext(local_file_path)[1]
         object_name = f"asr/{uuid.uuid4()}{ext}"
-
-    print(f"upload {local_file_path} to oss {object_name}")
-    bucket.put_object_from_file(object_name, local_file_path)
-
+    # Retry mechanism configuration
+    max_retries = 3
+    
+    for attempt in range(max_retries):
+        try:
+            print(f"upload {local_file_path} to oss {object_name} (Attempt {attempt + 1})")
+            bucket.put_object_from_file(object_name, local_file_path)
+            break  # Success: break out of the retry loop
+        except Exception as e:
+            print(f"Upload error: {e}")
+            if attempt == max_retries - 1:
+                raise e  # Failed all attempts: re-raise the exception
+            time.sleep(1)  # Wait 1 second before retrying
     https_url = bucket.sign_url('GET', object_name, expires=10)
     print(f"save to oss: {https_url}")
     return https_url
