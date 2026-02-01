@@ -232,3 +232,14 @@ func UpdateMobileAudioText(id int, audioText string) error {
 	log.Printf("Successfully updated mobile audio text for record: %d", id)
 	return nil
 }
+
+// UpdateMobileHISRecord 更新移动端记录的HIS诊疗记录
+func UpdateMobileHISRecord(id int, hisRecord string) error {
+	_, err := DB.Exec("UPDATE recordings SET medical_record = ? WHERE id = ?", hisRecord, id)
+	if err != nil {
+		return fmt.Errorf("failed to update mobile HIS record: %w", err)
+	}
+
+	log.Printf("Successfully updated mobile HIS record for record: %d", id)
+	return nil
+}

@@ -431,6 +431,56 @@
         .upload-label:hover {
             background-color: #e0e0e0;
         }
+
+        /* HIS 记录表格样式 */
+        .his-record-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            margin-top: 5px;
+        }
+
+        .his-record-table td {
+            padding: 8px 10px;
+            border: 1px solid #e8e8e8;
+            vertical-align: top;
+        }
+
+        .his-field-name {
+            width: 100px;
+            font-weight: 600;
+            color: #333;
+            background-color: #fafafa;
+        }
+
+        .his-field-value {
+            color: #666;
+            line-height: 1.5;
+        }
+
+        /* 隔行底色 */
+        .his-row-even .his-field-value {
+            background-color: #ffffff;
+        }
+
+        .his-row-odd .his-field-value {
+            background-color: #f5f5f5;
+        }
+
+        /* 移动端适配 */
+        @media screen and (max-width: 768px) {
+            .his-record-table {
+                font-size: 12px;
+            }
+
+            .his-record-table td {
+                padding: 6px 8px;
+            }
+
+            .his-field-name {
+                width: 80px;
+            }
+        }
     </style>
 </head>
 <body>

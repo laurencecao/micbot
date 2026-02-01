@@ -17,7 +17,7 @@ RUN pip install --no-cache-dir \
 
 # Copy application files
 COPY main.py .
-COPY soap.tmpl .
+COPY *.tmpl .
 
 # Expose port
 EXPOSE 8000

@@ -139,14 +139,15 @@ async function loadRecords() {
     try {
         const response = await fetch('/api/mobile/records');
         const records = await response.json();
-        
+
         if (records.length === 0) {
             recordsTable.innerHTML = '<tr><td colspan="5" class="empty-state">暂无记录</td></tr>';
             return;
         }
-        
+
         recordsTable.innerHTML = records.map(record => {
             const audioTextId = `audio-text-${record.id}`;
+            const hisRecordId = `his-record-${record.id}`;
             return `
             <tr>
                 <td>${record.id}</td>
@@ -171,22 +172,139 @@ async function loadRecords() {
                     </div>
                 </td>
                 <td>
-                    <div class="cell-content">${record.his_record || '(空)'}</div>
+                    <div class="cell-content" id="${hisRecordId}">${record.his_record || '(空)'}</div>
                 </td>
             </tr>
         `}).join('');
-        
+
         records.forEach(record => {
-            const element = document.getElementById(`audio-text-${record.id}`);
-            if (element) {
-                element.innerHTML = record.audio_text || '(空)';
+            const audioTextElement = document.getElementById(`audio-text-${record.id}`);
+            if (audioTextElement) {
+                audioTextElement.innerHTML = record.audio_text || '(空)';
+            }
+
+            // 处理 HIS 记录显示
+            const hisRecordElement = document.getElementById(`his-record-${record.id}`);
+            if (hisRecordElement && record.his_record && record.his_record !== '(空)') {
+                try {
+                    // 尝试解析 JSON
+                    const hisData = JSON.parse(record.his_record);
+                    hisRecordElement.innerHTML = renderHisTable(hisData);
+                } catch (e) {
+                    // 如果不是 JSON，直接显示文本
+                    hisRecordElement.innerHTML = record.his_record;
+                }
+            }
+
+            // 检查是否需要自动生成 HIS 记录
+            // 条件：录音听写非空，且整理后的HIS记录为空
+            if (record.audio_text && !record.his_record) {
+                generateHisRecord(record.id, record.audio_text, record.diagnosis_record || '');
             }
         });
-        
+
     } catch (err) {
         console.error('Error loading records:', err);
         recordsTable.innerHTML = '<tr><td colspan="5" class="empty-state">加载失败，请刷新重试</td></tr>';
     }
+}
+
+// 生成 HIS 记录并显示为表格
+async function generateHisRecord(recordId, dialogue, history) {
+    const hisRecordElement = document.getElementById(`his-record-${recordId}`);
+    if (!hisRecordElement) return;
+
+    // 显示生成中状态
+    hisRecordElement.innerHTML = '<div style="color: #1890ff;">正在生成 HIS 记录...</div>';
+
+    try {
+        const response = await fetch('/api/mobile/records/generate-his', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                id: recordId,
+                dialogue: dialogue,
+                history: history
+            })
+        });
+
+        const result = await response.json();
+
+        if (result.status === 'success' && result.table_data) {
+            // 渲染表格（后端已自动保存到数据库）
+            hisRecordElement.innerHTML = renderHisTable(result.table_data);
+        } else {
+            hisRecordElement.innerHTML = '<div style="color: #ff4d4f;">生成失败: ' + (result.detail || '未知错误') + '</div>';
+        }
+    } catch (err) {
+        console.error('Error generating HIS record:', err);
+        hisRecordElement.innerHTML = '<div style="color: #ff4d4f;">生成失败，请重试</div>';
+    }
+}
+
+// 保存 HIS 记录到数据库
+async function saveHisRecord(recordId, hisRecord) {
+    try {
+        const response = await fetch('/api/mobile/records/update-his', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                id: recordId,
+                his_record: hisRecord
+            })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            console.log('HIS record saved successfully for record:', recordId);
+        } else {
+            console.error('Failed to save HIS record:', result.message);
+        }
+    } catch (err) {
+        console.error('Error saving HIS record:', err);
+    }
+}
+
+// 将 HIS 数据渲染为 HTML 表格（隔行底色）
+function renderHisTable(tableData) {
+    const fields = [
+        '主诉',
+        '现病史',
+        '既往史',
+        '药物过敏史',
+        '体格检查',
+        '辅助检查',
+        '诊断',
+        '处理',
+        '注意事项',
+        '健康宣教',
+        '医师签名'
+    ];
+
+    let rows = '';
+    fields.forEach((field, index) => {
+        const value = tableData[field] || '暂无';
+        const rowClass = index % 2 === 0 ? 'his-row-even' : 'his-row-odd';
+        rows += `
+            <tr class="${rowClass}">
+                <td class="his-field-name">${field}</td>
+                <td class="his-field-value">${value.replace(/\n/g, '<br>')}</td>
+            </tr>
+        `;
+    });
+
+    return `
+        <table class="his-record-table">
+            <tbody>
+                ${rows}
+            </tbody>
+        </table>
+    `;
 }
 
 function openTextModal(id, type) {

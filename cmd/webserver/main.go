@@ -680,7 +680,7 @@ func mobileRecordsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 将markdown转换为HTML
+	// 将markdown转换为HTML（AudioText是markdown格式，HISRecord现在是JSON格式不需要转换）
 	for i := range records {
 		if records[i].AudioText != "" {
 			records[i].AudioText = markdownToHTML(records[i].AudioText)
@@ -832,6 +832,34 @@ func mobileUpdateDiagnosisHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func mobileUpdateHISHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req struct {
+		ID        int    `json:"id"`
+		HISRecord string `json:"his_record"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid JSON: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if err := database.UpdateMobileHISRecord(req.ID, req.HISRecord); err != nil {
+		http.Error(w, "Failed to update: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"success": true,
+		"message": "HIS record updated",
+	})
+}
+
 func mobileAudioHandler(w http.ResponseWriter, r *http.Request) {
 	filename := r.URL.Path[len("/mobile/audio/"):]
 	if filename == "" {
@@ -906,6 +934,54 @@ func mobileTranscribeHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func mobileGenerateHISHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req struct {
+		ID       int    `json:"id"`
+		Dialogue string `json:"dialogue"`
+		History  string `json:"history"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid JSON: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	// 调用Baichuan服务生成HIS记录
+	baichuanResp, err := baichuan.GenerateMedicalRecordWithTable(req.Dialogue, req.History)
+	if err != nil {
+		log.Printf("Failed to generate HIS record: %v", err)
+		http.Error(w, "Failed to generate HIS record: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// 将table_data转换为JSON字符串保存到数据库
+	tableDataJSON, err := json.Marshal(baichuanResp.TableData)
+	if err != nil {
+		log.Printf("Failed to marshal table_data: %v", err)
+		http.Error(w, "Failed to process HIS record", http.StatusInternalServerError)
+		return
+	}
+
+	// 保存到数据库
+	if err := database.UpdateMobileHISRecord(req.ID, string(tableDataJSON)); err != nil {
+		log.Printf("Failed to save HIS record: %v", err)
+		http.Error(w, "Failed to save HIS record", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"status":     "success",
+		"data":       baichuanResp.Data,
+		"table_data": baichuanResp.TableData,
+	})
+}
+
 func main() {
 	config.LoadConfigForMe()
 
@@ -930,6 +1006,8 @@ func main() {
 	http.HandleFunc("/api/mobile/records", withMobileCORS(mobileRecordsHandler))
 	http.HandleFunc("/api/mobile/records/upload", withMobileCORS(mobileUploadHandler))
 	http.HandleFunc("/api/mobile/records/update-diagnosis", withMobileCORS(mobileUpdateDiagnosisHandler))
+	http.HandleFunc("/api/mobile/records/update-his", withMobileCORS(mobileUpdateHISHandler))
+	http.HandleFunc("/api/mobile/records/generate-his", withMobileCORS(mobileGenerateHISHandler))
 	http.HandleFunc("/api/mobile/records/transcribe", withMobileCORS(mobileTranscribeHandler))
 	http.HandleFunc("/mobile/audio/", withMobileCORS(mobileAudioHandler))
 
