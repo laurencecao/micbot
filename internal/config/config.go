@@ -11,9 +11,10 @@ import (
 )
 
 var (
-	NatsURL   = "nats://10.0.2.150:14222"
-	ASRApiURL = "http://localhost:5000/transcribe"
-	DBPath    = "recorder.db"
+	NatsURL      = "nats://10.0.2.150:14222"
+	ASRApiURL    = "http://localhost:5000/transcribe"
+	StructApiURL = "http://localhost:8000/generate_soap"
+	DBPath       = "recorder.db"
 
 	// NATS Subjects
 	CmdStartRecord  = "command.record.start"
@@ -30,6 +31,10 @@ var (
 	SampleRate      = 16000
 	Channels        = 1
 	BitRate         = "192k"
+
+	CertFile  = "./certs/cert.pem"
+	KeyFile   = "./certs/key.pem"
+	EnableSSL = false
 
 	configLoaded = false
 )
@@ -80,6 +85,12 @@ func LoadFromINI(configPath string) error {
 			ASRApiURL = key.String()
 		}
 	}
+	// 读取struct配置
+	if section, err := cfg.GetSection("struct"); err == nil {
+		if key, err := section.GetKey("api_url"); err == nil {
+			StructApiURL = key.String()
+		}
+	}
 	// 读取database配置
 	if section, err := cfg.GetSection("database"); err == nil {
 		if key, err := section.GetKey("path"); err == nil {
@@ -125,6 +136,17 @@ func LoadFromINI(configPath string) error {
 			BitRate = key.String()
 		}
 	}
+	if section, err := cfg.GetSection("webserver"); err == nil {
+		if key, err := section.GetKey("cert_file"); err == nil {
+			CertFile = key.String()
+		}
+		if key, err := section.GetKey("key_file"); err == nil {
+			KeyFile = key.String()
+		}
+		if key, err := section.GetKey("enable_ssl"); err == nil {
+			EnableSSL = key.MustBool(false)
+		}
+	}
 	configLoaded = true
 	return nil
 }
@@ -167,7 +189,10 @@ func createDefaultConfig(configPath string) error {
 	recorderSection.NewKey("sample_rate", strconv.Itoa(SampleRate))
 	recorderSection.NewKey("channels", strconv.Itoa(Channels))
 	recorderSection.NewKey("bit_rate", BitRate)
-	// 写入文件
+	webserverSection, _ := cfg.NewSection("webserver")
+	webserverSection.NewKey("cert_file", CertFile)
+	webserverSection.NewKey("key_file", KeyFile)
+	webserverSection.NewKey("enable_ssl", strconv.FormatBool(EnableSSL))
 	if err := cfg.SaveTo(configPath); err != nil {
 		return fmt.Errorf("failed to save default config: %v", err)
 	}

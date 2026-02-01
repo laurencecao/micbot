@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  asr-diarization:
+    image: asr_diarization:latest
+    container_name: asr-diarization-service
+    build:
+      context: ./info/asr_format
+      dockerfile: Dockerfile
+    ports:
+      - "8800:8800"
+    environment:
+      - HF_TOKEN=${HF_TOKEN:-}
+      - TOKEN_302=${TOKEN_302:-}
+      - API_302_URL=${API_302_URL:-}
+      - DASHSCOPE_API_KEY=${DASHSCOPE_API_KEY:-}
+      - OSS_ACCESS_KEY_ID=${OSS_ACCESS_KEY_ID:-}
+      - OSS_ACCESS_KEY_SECRET=${OSS_ACCESS_KEY_SECRET:-}
+      - OSS_ENDPOINT=${OSS_ENDPOINT:-}
+      - OSS_BUCKET_NAME=${OSS_BUCKET_NAME:-}
+    restart: unless-stopped
+    networks:
+      - micbot-network
+
+  medical-scribe:
+    image: medical_scribe:latest
+    container_name: medical-scribe-service
+    build:
+      context: ./info/baichuan
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - API_KEY=${API_KEY:-sk-no-key-required}
+      - BASE_URL=${BASE_URL:-http://localhost:30000/v1}
+      - MODEL_NAME=${MODEL_NAME:-Baichuan-M2-32B-GPTQ-Int4}
+      - HOST=0.0.0.0
+      - PORT=8000
+    restart: unless-stopped
+    networks:
+      - micbot-network
+
+networks:
+  micbot-network:
+    driver: bridge

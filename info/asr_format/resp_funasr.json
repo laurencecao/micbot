@@ -1,0 +1,716 @@
+{
+    "file_url": "https://oss-pai-rmia4s0uublyu39v4o-cn-shanghai.oss-cn-shanghai.aliyuncs.com/5.txt.mp3?Expires=1769933045&OSSAccessKeyId=TMP.3KonyaJhYXXgBQ1xhc2T1DQ9yvj9FNQzmdPGzwZsVbZTE195dLgCwPt2oWT16mXJRQNxboJ8wntYTqhCg3tQiKEv5ARJJc&Signature=j5U99664AfCpDz%2FpTM63E2tO2Gw%3D",
+    "properties": {
+        "audio_format": "mp3",
+        "channels": [
+            0
+        ],
+        "original_sampling_rate": 44100,
+        "original_duration_in_milliseconds": 31246
+    },
+    "transcripts": [
+        {
+            "channel_id": 0,
+            "content_duration_in_milliseconds": 27680,
+            "text": "建议一：调整与纠正工作劳动中不良姿势，防寒防潮，避免过分劳累，局部保暖热敷。二：让腰部肌肉放松。三：加强腰部力量。四：药物治疗，妙娜莫比可口服，氟比洛芬酯贴膏外用。五：点缓解不理想，可以去疼痛科做冲击波治疗或骶管注药治疗。请问一下，严重吗？会不会引起瘫痪等严重问题？会不会一直疼？医生说是常见病，开了西药还有中药。建议如上，注意不要劳累。",
+            "sentences": [
+                {
+                    "begin_time": 200,
+                    "end_time": 7040,
+                    "text": "建议一：调整与纠正工作劳动中不良姿势，防寒防潮，避免过分劳累，局部保暖热敷。",
+                    "sentence_id": 1,
+                    "speaker_id": 0,
+                    "words": [
+                        {
+                            "begin_time": 200,
+                            "end_time": 560,
+                            "text": "建议",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 560,
+                            "end_time": 720,
+                            "text": "一",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 720,
+                            "end_time": 840,
+                            "text": "：",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 840,
+                            "end_time": 1240,
+                            "text": "调整",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 1240,
+                            "end_time": 1400,
+                            "text": "与",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 1400,
+                            "end_time": 1800,
+                            "text": "纠正",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 1800,
+                            "end_time": 2120,
+                            "text": "工作",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 2120,
+                            "end_time": 2400,
+                            "text": "劳动",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 2400,
+                            "end_time": 2600,
+                            "text": "中",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 2600,
+                            "end_time": 2920,
+                            "text": "不良",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 2920,
+                            "end_time": 3040,
+                            "text": "姿势",
+                            "punctuation": "，"
+                        },
+                        {
+                            "begin_time": 3560,
+                            "end_time": 3840,
+                            "text": "防",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 3840,
+                            "end_time": 4080,
+                            "text": "寒",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 4080,
+                            "end_time": 4240,
+                            "text": "防",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 4240,
+                            "end_time": 4400,
+                            "text": "潮",
+                            "punctuation": "，"
+                        },
+                        {
+                            "begin_time": 4560,
+                            "end_time": 4880,
+                            "text": "避免",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 4880,
+                            "end_time": 5200,
+                            "text": "过分",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 5200,
+                            "end_time": 5640,
+                            "text": "劳累",
+                            "punctuation": "，"
+                        },
+                        {
+                            "begin_time": 5920,
+                            "end_time": 6280,
+                            "text": "局部",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 6280,
+                            "end_time": 6640,
+                            "text": "保暖",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 6640,
+                            "end_time": 6800,
+                            "text": "热",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 6800,
+                            "end_time": 7040,
+                            "text": "敷",
+                            "punctuation": "。"
+                        }
+                    ]
+                },
+                {
+                    "begin_time": 7120,
+                    "end_time": 8600,
+                    "text": "二：让腰部肌肉放松。",
+                    "sentence_id": 2,
+                    "speaker_id": 0,
+                    "words": [
+                        {
+                            "begin_time": 7120,
+                            "end_time": 7160,
+                            "text": "二",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 7160,
+                            "end_time": 7360,
+                            "text": "：",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 7360,
+                            "end_time": 7560,
+                            "text": "让",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 7560,
+                            "end_time": 7920,
+                            "text": "腰部",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 7920,
+                            "end_time": 8240,
+                            "text": "肌肉",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 8240,
+                            "end_time": 8600,
+                            "text": "放松",
+                            "punctuation": "。"
+                        }
+                    ]
+                },
+                {
+                    "begin_time": 8760,
+                    "end_time": 10240,
+                    "text": "三：加强腰部力量。",
+                    "sentence_id": 3,
+                    "speaker_id": 0,
+                    "words": [
+                        {
+                            "begin_time": 8760,
+                            "end_time": 9040,
+                            "text": "三",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 9040,
+                            "end_time": 9280,
+                            "text": "：",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 9280,
+                            "end_time": 9680,
+                            "text": "加强",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 9680,
+                            "end_time": 9960,
+                            "text": "腰部",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 9960,
+                            "end_time": 10240,
+                            "text": "力量",
+                            "punctuation": "。"
+                        }
+                    ]
+                },
+                {
+                    "begin_time": 10400,
+                    "end_time": 15440,
+                    "text": "四：药物治疗，妙娜莫比可口服，氟比洛芬酯贴膏外用。",
+                    "sentence_id": 4,
+                    "speaker_id": 0,
+                    "words": [
+                        {
+                            "begin_time": 10400,
+                            "end_time": 10680,
+                            "text": "四",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 10680,
+                            "end_time": 10720,
+                            "text": "：",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 10720,
+                            "end_time": 11040,
+                            "text": "药物",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 11040,
+                            "end_time": 11160,
+                            "text": "治疗",
+                            "punctuation": "，"
+                        },
+                        {
+                            "begin_time": 11720,
+                            "end_time": 11960,
+                            "text": "妙",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 11960,
+                            "end_time": 12240,
+                            "text": "娜",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 12240,
+                            "end_time": 12440,
+                            "text": "莫",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 12440,
+                            "end_time": 12600,
+                            "text": "比",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 12600,
+                            "end_time": 12840,
+                            "text": "可",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 12840,
+                            "end_time": 13560,
+                            "text": "口服",
+                            "punctuation": "，"
+                        },
+                        {
+                            "begin_time": 13600,
+                            "end_time": 13800,
+                            "text": "氟",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 13800,
+                            "end_time": 13960,
+                            "text": "比",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 13960,
+                            "end_time": 14160,
+                            "text": "洛",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 14160,
+                            "end_time": 14320,
+                            "text": "芬",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 14320,
+                            "end_time": 14560,
+                            "text": "酯",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 14560,
+                            "end_time": 14800,
+                            "text": "贴",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 14800,
+                            "end_time": 15080,
+                            "text": "膏",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 15080,
+                            "end_time": 15280,
+                            "text": "外",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 15280,
+                            "end_time": 15440,
+                            "text": "用",
+                            "punctuation": "。"
+                        }
+                    ]
+                },
+                {
+                    "begin_time": 15480,
+                    "end_time": 20520,
+                    "text": "五：点缓解不理想，可以去疼痛科做冲击波治疗或骶管注药治疗。",
+                    "sentence_id": 5,
+                    "speaker_id": 0,
+                    "words": [
+                        {
+                            "begin_time": 15480,
+                            "end_time": 15640,
+                            "text": "五",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 15640,
+                            "end_time": 15680,
+                            "text": "：",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 15680,
+                            "end_time": 15960,
+                            "text": "点",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 15960,
+                            "end_time": 16280,
+                            "text": "缓解",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 16280,
+                            "end_time": 16400,
+                            "text": "不",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 16400,
+                            "end_time": 16720,
+                            "text": "理想",
+                            "punctuation": "，"
+                        },
+                        {
+                            "begin_time": 16840,
+                            "end_time": 17080,
+                            "text": "可以",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 17080,
+                            "end_time": 17280,
+                            "text": "去",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 17280,
+                            "end_time": 17680,
+                            "text": "疼痛",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 17680,
+                            "end_time": 18200,
+                            "text": "科",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 18200,
+                            "end_time": 18440,
+                            "text": "做",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 18440,
+                            "end_time": 18760,
+                            "text": "冲击",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 18760,
+                            "end_time": 18960,
+                            "text": "波",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 18960,
+                            "end_time": 19400,
+                            "text": "治疗",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 19400,
+                            "end_time": 19640,
+                            "text": "或",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 19640,
+                            "end_time": 19840,
+                            "text": "骶",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 19840,
+                            "end_time": 20040,
+                            "text": "管",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 20040,
+                            "end_time": 20240,
+                            "text": "注",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 20240,
+                            "end_time": 20400,
+                            "text": "药",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 20400,
+                            "end_time": 20520,
+                            "text": "治疗",
+                            "punctuation": "。"
+                        }
+                    ]
+                },
+                {
+                    "begin_time": 21710,
+                    "end_time": 22750,
+                    "text": "请问一下，严重吗？",
+                    "sentence_id": 6,
+                    "speaker_id": 1,
+                    "words": [
+                        {
+                            "begin_time": 21710,
+                            "end_time": 21990,
+                            "text": "请问",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 21990,
+                            "end_time": 22070,
+                            "text": "一下",
+                            "punctuation": "，"
+                        },
+                        {
+                            "begin_time": 22230,
+                            "end_time": 22550,
+                            "text": "严重",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 22550,
+                            "end_time": 22750,
+                            "text": "吗",
+                            "punctuation": "？"
+                        }
+                    ]
+                },
+                {
+                    "begin_time": 22910,
+                    "end_time": 24430,
+                    "text": "会不会引起瘫痪等严重问题？",
+                    "sentence_id": 7,
+                    "speaker_id": 1,
+                    "words": [
+                        {
+                            "begin_time": 22910,
+                            "end_time": 23270,
+                            "text": "会不会",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 23270,
+                            "end_time": 23590,
+                            "text": "引起",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 23590,
+                            "end_time": 23670,
+                            "text": "瘫",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 23670,
+                            "end_time": 23910,
+                            "text": "痪",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 23910,
+                            "end_time": 24030,
+                            "text": "等",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 24030,
+                            "end_time": 24310,
+                            "text": "严重",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 24310,
+                            "end_time": 24430,
+                            "text": "问题",
+                            "punctuation": "？"
+                        }
+                    ]
+                },
+                {
+                    "begin_time": 24910,
+                    "end_time": 25830,
+                    "text": "会不会一直疼？",
+                    "sentence_id": 8,
+                    "speaker_id": 1,
+                    "words": [
+                        {
+                            "begin_time": 24910,
+                            "end_time": 25270,
+                            "text": "会不会",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 25270,
+                            "end_time": 25590,
+                            "text": "一直",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 25590,
+                            "end_time": 25830,
+                            "text": "疼",
+                            "punctuation": "？"
+                        }
+                    ]
+                },
+                {
+                    "begin_time": 26030,
+                    "end_time": 28550,
+                    "text": "医生说是常见病，开了西药还有中药。",
+                    "sentence_id": 9,
+                    "speaker_id": 1,
+                    "words": [
+                        {
+                            "begin_time": 26030,
+                            "end_time": 26350,
+                            "text": "医生",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 26350,
+                            "end_time": 26670,
+                            "text": "说是",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 26670,
+                            "end_time": 27030,
+                            "text": "常见",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 27030,
+                            "end_time": 27070,
+                            "text": "病",
+                            "punctuation": "，"
+                        },
+                        {
+                            "begin_time": 27230,
+                            "end_time": 27510,
+                            "text": "开了",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 27510,
+                            "end_time": 27670,
+                            "text": "西",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 27670,
+                            "end_time": 27870,
+                            "text": "药",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 27870,
+                            "end_time": 28150,
+                            "text": "还有",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 28150,
+                            "end_time": 28550,
+                            "text": "中药",
+                            "punctuation": "。"
+                        }
+                    ]
+                },
+                {
+                    "begin_time": 29390,
+                    "end_time": 31190,
+                    "text": "建议如上，注意不要劳累。",
+                    "sentence_id": 10,
+                    "speaker_id": 0,
+                    "words": [
+                        {
+                            "begin_time": 29390,
+                            "end_time": 29750,
+                            "text": "建议",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 29750,
+                            "end_time": 29910,
+                            "text": "如",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 29910,
+                            "end_time": 29990,
+                            "text": "上",
+                            "punctuation": "，"
+                        },
+                        {
+                            "begin_time": 30230,
+                            "end_time": 30550,
+                            "text": "注意",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 30550,
+                            "end_time": 30870,
+                            "text": "不要",
+                            "punctuation": ""
+                        },
+                        {
+                            "begin_time": 30870,
+                            "end_time": 31190,
+                            "text": "劳累",
+                            "punctuation": "。"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
