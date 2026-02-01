@@ -163,7 +163,7 @@ type MobileRecord struct {
 }
 
 func GetMobileRecords() ([]MobileRecord, error) {
-	rows, err := DB.Query("SELECT id, medical_checks, file_name, transcript, medical_record, upload_time FROM recordings ORDER BY id DESC")
+	rows, err := DB.Query("SELECT id, medical_checks, file_name, dialogue, medical_record, upload_time FROM recordings ORDER BY id DESC")
 	if err != nil {
 		return nil, err
 	}
@@ -208,5 +208,27 @@ func UpdateMobileDiagnosis(id int, content string) error {
 	}
 
 	log.Printf("Successfully updated mobile diagnosis for record: %d", id)
+	return nil
+}
+
+// GetMobileRecordByID 根据ID获取移动端记录
+func GetMobileRecordByID(id int) (MobileRecord, error) {
+	var rec MobileRecord
+	err := DB.QueryRow("SELECT id, medical_checks, file_name, transcript, medical_record, upload_time FROM recordings WHERE id = ?", id).Scan(
+		&rec.ID, &rec.DiagnosisRecord, &rec.AudioFile, &rec.AudioText, &rec.HISRecord, &rec.CreatedAt,
+	)
+	if err != nil {
+		return rec, fmt.Errorf("failed to get mobile record by id: %w", err)
+	}
+	return rec, nil
+}
+
+func UpdateMobileAudioText(id int, audioText string) error {
+	_, err := DB.Exec("UPDATE recordings SET dialogue = ? WHERE id = ?", audioText, id)
+	if err != nil {
+		return fmt.Errorf("failed to update mobile audio text: %w", err)
+	}
+
+	log.Printf("Successfully updated mobile audio text for record: %d", id)
 	return nil
 }

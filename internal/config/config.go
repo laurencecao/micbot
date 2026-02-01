@@ -11,9 +11,10 @@ import (
 )
 
 var (
-	NatsURL   = "nats://10.0.2.150:14222"
-	ASRApiURL = "http://localhost:5000/transcribe"
-	DBPath    = "recorder.db"
+	NatsURL      = "nats://10.0.2.150:14222"
+	ASRApiURL    = "http://localhost:5000/transcribe"
+	StructApiURL = "http://localhost:8000/generate_soap"
+	DBPath       = "recorder.db"
 
 	// NATS Subjects
 	CmdStartRecord  = "command.record.start"
@@ -82,6 +83,12 @@ func LoadFromINI(configPath string) error {
 	if section, err := cfg.GetSection("asr"); err == nil {
 		if key, err := section.GetKey("api_url"); err == nil {
 			ASRApiURL = key.String()
+		}
+	}
+	// 读取struct配置
+	if section, err := cfg.GetSection("struct"); err == nil {
+		if key, err := section.GetKey("api_url"); err == nil {
+			StructApiURL = key.String()
 		}
 	}
 	// 读取database配置

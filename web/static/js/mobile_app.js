@@ -145,7 +145,9 @@ async function loadRecords() {
             return;
         }
         
-        recordsTable.innerHTML = records.map(record => `
+        recordsTable.innerHTML = records.map(record => {
+            const audioTextId = `audio-text-${record.id}`;
+            return `
             <tr>
                 <td>${record.id}</td>
                 <td>
@@ -163,16 +165,23 @@ async function loadRecords() {
                     ` : '(无录音)'}
                 </td>
                 <td>
-                    <div class="cell-content">${record.audio_text || '(空)'}</div>
+                    <div class="cell-content" id="${audioTextId}"></div>
                     <div class="action-btns">
-                        <button class="btn btn-small btn-success" onclick="convertToText(${record.id})">转为文本</button>
+                        <button class="btn btn-small btn-success" onclick="convertToText(${record.id}, this)">转为文本</button>
                     </div>
                 </td>
                 <td>
                     <div class="cell-content">${record.his_record || '(空)'}</div>
                 </td>
             </tr>
-        `).join('');
+        `}).join('');
+        
+        records.forEach(record => {
+            const element = document.getElementById(`audio-text-${record.id}`);
+            if (element) {
+                element.innerHTML = record.audio_text || '(空)';
+            }
+        });
         
     } catch (err) {
         console.error('Error loading records:', err);
@@ -232,8 +241,34 @@ async function saveText() {
     }
 }
 
-async function convertToText(id) {
-    alert('文本转换功能尚未实现');
+async function convertToText(id, button) {
+    button.disabled = true;
+    button.textContent = '转录中...';
+    
+    try {
+        const response = await fetch('/api/mobile/records/transcribe', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ id: id })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            loadRecords();
+        } else {
+            alert('转录失败: ' + (result.message || '未知错误'));
+            button.disabled = false;
+            button.textContent = '转为文本';
+        }
+    } catch (err) {
+        console.error('Transcription error:', err);
+        alert('转录失败，请重试');
+        button.disabled = false;
+        button.textContent = '转为文本';
+    }
 }
 
 textModal.addEventListener('click', (e) => {

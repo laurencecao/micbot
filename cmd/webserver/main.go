@@ -420,10 +420,10 @@ func subscribeUploadRecord() {
 
 		fmt.Printf("带说话者识别的转录结果: %v\n", speakerResult)
 
-		// 将raw_segments转换为字符串显示
+		// 将segments转换为JSON字符串存储
 		rawSegmentsStr := ""
-		if speakerResult.RawSegments != nil && len(speakerResult.RawSegments) > 0 {
-			segmentsBytes, err := json.Marshal(speakerResult.RawSegments)
+		if len(speakerResult.Segments) > 0 {
+			segmentsBytes, err := json.Marshal(speakerResult.Segments)
 			if err == nil {
 				rawSegmentsStr = string(segmentsBytes)
 			}
@@ -434,9 +434,9 @@ func subscribeUploadRecord() {
 			FileName:       cmd.Payload,
 			UploadTime:     time.Now(),
 			SizeKB:         len(cmd.Body) / 1024,
-			Transcript:     rawSegmentsStr,           // raw_segments放在Transcript列
-			Dialogue:       speakerResult.Transcript, // 说话者识别的文本放在Dialogue列
-			MedicalRecord:  "",                       // 初始化空字符串，后面会填充
+			Transcript:     rawSegmentsStr,             // segments JSON放在Transcript列
+			Dialogue:       speakerResult.ToMarkdown(), // markdown格式文本放在Dialogue列
+			MedicalRecord:  "",                         // 初始化空字符串，后面会填充
 			RelatedCommand: "(新ASR服务完成，等待Baichuan处理)",
 		}
 
@@ -680,6 +680,13 @@ func mobileRecordsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// 将markdown转换为HTML
+	for i := range records {
+		if records[i].AudioText != "" {
+			records[i].AudioText = markdownToHTML(records[i].AudioText)
+		}
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(records); err != nil {
 		log.Printf("JSON encode error: %v\n", err)
@@ -842,6 +849,63 @@ func mobileAudioHandler(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, audioPath)
 }
 
+func mobileTranscribeHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req struct {
+		ID int `json:"id"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid JSON: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	record, err := database.GetMobileRecordByID(req.ID)
+	if err != nil {
+		log.Printf("Failed to get record: %v", err)
+		http.Error(w, "Record not found", http.StatusNotFound)
+		return
+	}
+
+	if record.AudioFile == "" {
+		http.Error(w, "No audio file associated with this record", http.StatusBadRequest)
+		return
+	}
+
+	audioPath := filepath.Join(config.RecorderBasedir, record.AudioFile)
+	audioData, err := os.ReadFile(audioPath)
+	if err != nil {
+		log.Printf("Failed to read audio file: %v", err)
+		http.Error(w, "Failed to read audio file", http.StatusInternalServerError)
+		return
+	}
+
+	result, err := asr.TranscribeWithSpeaker(audioData)
+	if err != nil {
+		log.Printf("Transcription failed: %v", err)
+		http.Error(w, "Transcription failed: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	markdownText := result.ToMarkdown()
+	if err := database.UpdateMobileAudioText(req.ID, markdownText); err != nil {
+		log.Printf("Failed to save transcript: %v", err)
+		http.Error(w, "Failed to save transcript", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"success":    true,
+		"transcript": markdownText,
+		"message":    "Transcription completed successfully",
+	})
+}
+
 func main() {
 	config.LoadConfigForMe()
 
@@ -866,6 +930,7 @@ func main() {
 	http.HandleFunc("/api/mobile/records", withMobileCORS(mobileRecordsHandler))
 	http.HandleFunc("/api/mobile/records/upload", withMobileCORS(mobileUploadHandler))
 	http.HandleFunc("/api/mobile/records/update-diagnosis", withMobileCORS(mobileUpdateDiagnosisHandler))
+	http.HandleFunc("/api/mobile/records/transcribe", withMobileCORS(mobileTranscribeHandler))
 	http.HandleFunc("/mobile/audio/", withMobileCORS(mobileAudioHandler))
 
 	http.Handle("/static/", withLoggingStatic(http.StripPrefix("/static/", http.FileServer(http.Dir("./web/static")))))

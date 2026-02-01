@@ -18,6 +18,7 @@ COMPUTE_TYPE = "float16" if DEVICE == "cuda" else "int8"
 BATCH_SIZE = 16
 HF_TOKEN = os.environ.get('HF_TOKEN')
 TOKEN_302 = os.environ.get('TOKEN_302')
+API_302_URL = os.environ.get('API_302_URL')
 
 # Global Models
 print(f"Loading models on {DEVICE}...")
@@ -28,7 +29,8 @@ DIARIZE_MODEL = None
 
 
 def using_online_api(tmp_path, language=None):   
-    url = "https://api.302ai.cn/302/whisperx"
+    # url = "https://api.302ai.cn/302/whisperx"
+    url = API_302_URL
     
     # Configuration based on screenshot
     payload = {
@@ -98,15 +100,17 @@ async def transcribe_audio(file: UploadFile = File(...)):
         # 2. Get result from Online API
         # response.json() in the helper function already returns a Dict
         result = using_online_api(tmp_path)
+        #print("......", result, "......")
         
         # REMOVED: inner_json_str = json.loads(api_response_raw) 
         # REMOVED: result = json.loads(inner_json_str)
         # 4. Extract Segments and Language
         segments = result.get("segments", [])
-        language = result.get("language", "en") # Default to en if missing
+        language = result.get("language", "zh") # Default to en if missing
         
         # 5. Format Output
         formatted_list = format_speech_by_speaker(segments)
+        print("......", formatted_list, ".....")
         
         # 6. Return consistent structure
         return {
@@ -184,5 +188,6 @@ async def transcribe_audio2(
 
 if __name__ == "__main__":
     import uvicorn
+    print(f"using BACKEND: {API_302_URL}")
     uvicorn.run(app, host="0.0.0.0", port=8800)
 

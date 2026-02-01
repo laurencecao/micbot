@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"strings"
 
 	"medishare.io/micbot/internal/config"
 )
@@ -109,11 +110,33 @@ func ensure_wave(audioData []byte) ([]byte, error) {
 	return wavData, nil
 }
 
-// ASRFormatResponse 新ASR服务返回的响应格式
+// ASRSegment 单个说话者分段
+type ASRSegment struct {
+	Start   float64 `json:"start"`
+	End     float64 `json:"end"`
+	Speaker string  `json:"speaker"`
+	Text    string  `json:"text"`
+}
+
+// ASRFormatResponse 新ASR服务返回的响应格式（实际返回的是segments数组）
 type ASRFormatResponse struct {
-	DetectedLanguage string        `json:"detected_language"`
-	Transcript       string        `json:"transcript"`
-	RawSegments      []interface{} `json:"raw_segments"`
+	Segments []ASRSegment `json:"segments"`
+}
+
+// ToMarkdown 将segments转为markdown格式文本，每个说话者一段
+func (r ASRFormatResponse) ToMarkdown() string {
+	if len(r.Segments) == 0 {
+		return ""
+	}
+
+	var result strings.Builder
+	for i, seg := range r.Segments {
+		if i > 0 {
+			result.WriteString("\n\n")
+		}
+		result.WriteString(fmt.Sprintf("**%s**: %s", seg.Speaker, seg.Text))
+	}
+	return result.String()
 }
 
 // TranscribeWithSpeaker 使用新的ASR服务发送音频数据，返回包含说话者识别和原始分段的响应
@@ -144,9 +167,7 @@ func TranscribeWithSpeaker(audioData []byte) (ASRFormatResponse, error) {
 		return ASRFormatResponse{}, fmt.Errorf("关闭表单写入器失败: %v", err)
 	}
 
-	// 创建 HTTP 请求 - 使用新的ASR服务地址
-	asrFormatURL := "http://localhost:8800/transcribe"
-	req, err := http.NewRequest("POST", asrFormatURL, body)
+	req, err := http.NewRequest("POST", config.ASRApiURL, body)
 	if err != nil {
 		return ASRFormatResponse{}, fmt.Errorf("创建请求失败: %v", err)
 	}
